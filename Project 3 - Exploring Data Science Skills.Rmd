@@ -1,0 +1,55 @@
+---
+title: "Project 3"
+author: "Team DAREZ"
+date: "10/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# DeleteMe Notes
+
+Delete these prior to posting.
+
+```{r include=FALSE, message=FALSE}
+# This is formatted from a previous project. That example project can be found through the link:
+# https://rpubs.com/deepakmongia/Data-607-Project-3
+```
+
+
+## Introduction
+
+Example paragraph:
+An October 2012 Harvard Business Review article called Data Scientist the “sexiest job of the 21st century.” In 21st-century time, 2012 is eons ago. Glassdoor, the popular career and company review site, has named Data Scientist the best job in America for three years running. We hear tales of huge starting salaries and high demand for talent. Still, for a number of reasons, we’re cautious.
+
+## Setup 
+
+How did we gather the data? What tools did we use? Examplain our setup for the analysis
+
+## Analysis
+
+What are you going to look for in the data (besides just skills)? How are you going to get there? What cleaning was necessary?
+
+How is our review relevant to data science today? Why did we choose these examples?
+
+### Research Example 1 
+
+In this first one, we could review the lit available from forums and publishers like Kaggle, Medium, Towards Data Science, Reddit, etc... then report on it.
+
+### Research Example 2
+
+Here, we could perform a small web-scraping study of a popular job site like Indeed and review the data for confirmation or denial of example 1.
+
+### Research Example 3
+
+This might be the best spot to demonstrate the results of a survey or another research example. 
+
+## Conclusion
+
+Which are the most valued data science skills? How do we know? Did we learn anything different than what the articles/literature said?
+
+## Sources
+
+Where did the data come from? 
