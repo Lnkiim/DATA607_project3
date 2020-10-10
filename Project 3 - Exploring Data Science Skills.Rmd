@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # DeleteMe Notes
 
 Delete these prior to posting.
+Rachel is practicing her GitHub skills so I'm making a silly edit on this file here. 
 
 ```{r include=FALSE, message=FALSE}
 # This is formatted from a previous project. That example project can be found through the link:
