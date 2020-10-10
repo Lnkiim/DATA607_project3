@@ -10,6 +10,7 @@ GO
 
 CREATE TABLE [dbo].[indeed_scrape_1] (
 	[SurveyID] INT IDENTITY(1,1) NOT NULL,
+	[source] [nvarchar](255) NULL,
 	[title] nvarchar(4000) NULL,
 	[company] nvarchar(255) NULL,
 	[location] nvarchar(255) NULL,
