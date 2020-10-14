@@ -375,25 +375,312 @@ summary {
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>Example paragraph: An October 2012 Harvard Business Review article called Data Scientist the “sexiest job of the 21st century.” In 21st-century time, 2012 is eons ago. Glassdoor, the popular career and company review site, has named Data Scientist the best job in America for three years running. We hear tales of huge starting salaries and high demand for talent. Still, for a number of reasons, we’re cautious.</p>
-</div>
-<div id="setup" class="section level2">
-<h2>Setup</h2>
+<div id="setup" class="section level3">
+<h3>Setup</h3>
 <p>How did we gather the data? What tools did we use? Examplain our setup for the analysis</p>
+<pre class="r"><code># For Web-scrap of Indeed
+library(rvest)</code></pre>
+<pre><code>## Loading required package: xml2</code></pre>
+<pre class="r"><code>library(readr)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;readr&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:rvest&#39;:
+## 
+##     guess_encoding</code></pre>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## -- Attaching packages ---------------------------------------- tidyverse 1.3.0 --</code></pre>
+<pre><code>## v ggplot2 3.3.2     v dplyr   1.0.1
+## v tibble  3.0.3     v stringr 1.4.0
+## v tidyr   1.1.1     v forcats 0.5.0
+## v purrr   0.3.4</code></pre>
+<pre><code>## -- Conflicts ------------------------------------------- tidyverse_conflicts() --
+## x dplyr::filter()         masks stats::filter()
+## x readr::guess_encoding() masks rvest::guess_encoding()
+## x dplyr::lag()            masks stats::lag()
+## x purrr::pluck()          masks rvest::pluck()</code></pre>
+<pre class="r"><code>library(DT)</code></pre>
+</div>
 </div>
 <div id="analysis" class="section level2">
 <h2>Analysis</h2>
 <p>What are you going to look for in the data (besides just skills)? How are you going to get there? What cleaning was necessary?</p>
 <p>How is our review relevant to data science today? Why did we choose these examples?</p>
-<div id="research-example-1" class="section level3">
-<h3>Research Example 1</h3>
+<div id="kaggle-survey" class="section level3">
+<h3>Kaggle Survey</h3>
 <p>In this first one, we could review the lit available from forums and publishers like Kaggle, Medium, Towards Data Science, Reddit, etc… then report on it.</p>
 </div>
-<div id="research-example-2" class="section level3">
-<h3>Research Example 2</h3>
+<div id="indeed-scrape" class="section level3">
+<h3>Indeed Scrape</h3>
 <p>Here, we could perform a small web-scraping study of a popular job site like Indeed and review the data for confirmation or denial of example 1.</p>
+<p>Initial Run:</p>
+<pre><code>## [1] &quot;\nJr. Data Scientist&quot;                &quot;\nData Scientist&quot;                   
+## [3] &quot;\nData Scientist - Machine Learning&quot; &quot;\nData Scientist&quot;                   
+## [5] &quot;\nData Scientist&quot;                    &quot;\nData Scientist&quot;</code></pre>
+<p>Found this string to be the most effective at parsing into usable form.</p>
+<pre class="r"><code>str_extract(job_data, &quot;(\\w+.+)+&quot;)</code></pre>
+<pre><code>##  [1] &quot;Jr. Data Scientist&quot;                                     
+##  [2] &quot;Data Scientist&quot;                                         
+##  [3] &quot;Data Scientist - Machine Learning&quot;                      
+##  [4] &quot;Data Scientist&quot;                                         
+##  [5] &quot;Data Scientist&quot;                                         
+##  [6] &quot;Data Scientist&quot;                                         
+##  [7] &quot;Data Scientist&quot;                                         
+##  [8] &quot;Data Scientist&quot;                                         
+##  [9] &quot;Data Scientist&quot;                                         
+## [10] &quot;Co-op Data Scientist 2021&quot;                              
+## [11] &quot;Data Scientist&quot;                                         
+## [12] &quot;Data Scientist, Intermediate&quot;                           
+## [13] &quot;Data Scientist&quot;                                         
+## [14] &quot;Undergraduate Internship/Co-op Program - Data Scientist&quot;
+## [15] &quot;Data Scientist&quot;</code></pre>
+<p>Repeat process for salary. Might be best to have it as a separate analysis without it being attached to jobs directly. It requires a lot of cleaning and figuring out how to categorize the ranges to understand the distribution.</p>
+<pre class="r"><code>url &lt;- &#39;https://www.indeed.com/jobs?q=data%20scientist&amp;l&amp;vjk=00ba1a22ba67ffd2&#39;
+webpage &lt;- read_html(url)
+sal_data_html &lt;- html_nodes(webpage,&#39;.salaryText&#39;) 
+sal_data &lt;- html_text(sal_data_html)
+head(sal_data)</code></pre>
+<pre><code>## [1] &quot;\n$102,663 - $157,709 a year&quot; &quot;\n$130,000 - $140,000 a year&quot;
+## [3] &quot;\n$91,000 - $112,000 a year&quot;  &quot;\n$65,000 - $85,000 a year&quot;  
+## [5] &quot;\n$70,000 - $90,000 a year&quot;   &quot;\n$55 an hour&quot;</code></pre>
+<p>Cleaning begins with:</p>
+<pre class="r"><code># Extracting the ranges provided as characters
+salary_data &lt;- str_extract(job_data, &quot;(\\w+.+)+&quot;) 
+# Removing the hourly rates - compare apples-apples
+salary_data &lt;- str_remove_all(salary_data, &quot;\\d+ an hour&quot;)
+# Remove the label &quot; a year&quot; since all shoudl be 
+salary_data &lt;- str_remove_all(salary_data, &quot; a year&quot;)
+# Remove the dollar sign
+salary_data &lt;- str_remove_all(salary_data,&quot;\\$&quot;)
+# Anticipating duplcicates - testing a solution
+salary_data &lt;- as.data.frame(salary_data)
+salary_data[2,1] &lt;- (&quot;70,000 - $90,000&quot;)
+salary_data %&gt;% 
+  mutate(salary = as.factor(job_data)) %&gt;%
+  count(salary)</code></pre>
+<pre><code>##                                                      salary  n
+## 1                               \nCo-op Data Scientist 2021  1
+## 2                                          \nData Scientist 10
+## 3                       \nData Scientist - Machine Learning  1
+## 4                            \nData Scientist, Intermediate  1
+## 5                                      \nJr. Data Scientist  1
+## 6 \nUndergraduate Internship/Co-op Program - Data Scientist  1</code></pre>
+<p>Will need to run with more data to determine if effective.</p>
+<pre><code>## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)
+
+## Warning in cbind(title, company, location, summary, link): number of rows of
+## result is not a multiple of vector length (arg 2)</code></pre>
+<p>Creates a data frame of the publicly posted jobs on Indeed at the time of the scrape called <em>jobs</em>. It contains several attributes of the posted jobs, namely, the job title, the company name or employer, location, job summary, and a link to the job.</p>
 </div>
-<div id="research-example-3" class="section level3">
-<h3>Research Example 3</h3>
+<div id="glassdoor-text-analysis" class="section level3">
+<h3>Glassdoor Text Analysis</h3>
 <p>This might be the best spot to demonstrate the results of a survey or another research example.</p>
 </div>
 </div>
@@ -403,7 +690,7 @@ summary {
 </div>
 <div id="sources" class="section level2">
 <h2>Sources</h2>
-<p>Where did the data come from?</p>
+<p>Where did the data come from? Who analyzed each part of the data?</p>
 </div>
 </div>
 

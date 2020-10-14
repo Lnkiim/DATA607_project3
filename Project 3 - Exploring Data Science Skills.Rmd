@@ -24,9 +24,19 @@ Delete these prior to posting.
 Example paragraph:
 An October 2012 Harvard Business Review article called Data Scientist the “sexiest job of the 21st century.” In 21st-century time, 2012 is eons ago. Glassdoor, the popular career and company review site, has named Data Scientist the best job in America for three years running. We hear tales of huge starting salaries and high demand for talent. Still, for a number of reasons, we’re cautious.
 
-## Setup 
+### Setup 
 
 How did we gather the data? What tools did we use? Examplain our setup for the analysis
+
+```{r}
+# For Web-scrap of Indeed
+library(rvest)
+library(readr)
+library(tidyverse)
+library(DT)
+library(xml2)
+```
+
 
 ## Analysis
 
@@ -34,15 +44,147 @@ What are you going to look for in the data (besides just skills)? How are you go
 
 How is our review relevant to data science today? Why did we choose these examples?
 
-### Research Example 1 
+### Kaggle Survey 
 
 In this first one, we could review the lit available from forums and publishers like Kaggle, Medium, Towards Data Science, Reddit, etc... then report on it.
 
-### Research Example 2
+### Indeed Scrape
 
 Here, we could perform a small web-scraping study of a popular job site like Indeed and review the data for confirmation or denial of example 1.
 
-### Research Example 3
+Questions might include: 
+  * What was the search for?  
+    - i.e. title of data science
+  * How many jobs in this scrape?
+  * Where are they located?
+  * What skills are required/preferred?
+    - Are there any repeats?
+    - Are most soft or hard skills?
+  * What is the minimum experience?
+  * What company is hiring the most?
+  * How frequently are new jobs posted?
+  * What is the average salary? 
+
+Initial Run:
+
+```{r echo=FALSE}
+url <- 'https://www.indeed.com/jobs?q=data%20scientist&l&vjk=00ba1a22ba67ffd2'
+webpage <- read_html(url)
+job_data_html <- html_nodes(webpage,'.jobtitle , #sja0 b') 
+job_data <- html_text(job_data_html)
+head(job_data)
+```
+
+Found this string to be the most effective at parsing into usable form.
+
+```{r}
+str_extract(job_data, "(\\w+.+)+")
+```
+
+Repeat process for salary. Might be best to have it as a separate analysis without it being attached to jobs directly. It requires a lot of cleaning and figuring out how to categorize the ranges to understand the distribution. 
+
+```{r}
+url <- 'https://www.indeed.com/jobs?q=data%20scientist&l&vjk=00ba1a22ba67ffd2'
+webpage <- read_html(url)
+sal_data_html <- html_nodes(webpage,'.salaryText') 
+sal_data <- html_text(sal_data_html)
+head(sal_data)
+```
+
+Cleaning begins with:
+
+```{r}
+# Extracting the ranges provided as characters
+salary_data <- str_extract(job_data, "(\\w+.+)+") 
+# Removing the hourly rates - compare apples-apples
+salary_data <- str_remove_all(salary_data, "\\d+ an hour")
+# Remove the label " a year" since all shoudl be 
+salary_data <- str_remove_all(salary_data, " a year")
+# Remove the dollar sign
+salary_data <- str_remove_all(salary_data,"\\$")
+# Anticipating duplcicates - testing a solution
+salary_data <- as.data.frame(salary_data)
+salary_data[2,1] <- ("70,000 - $90,000")
+salary_data %>% 
+  mutate(salary = as.factor(job_data)) %>%
+  count(salary)
+
+
+```
+
+Will need to run with more data to determine if effective. 
+
+```{r message=FALSE, include=FALSE}
+     ############################
+    #      Do Not Run!         #
+   #    See Data In Repo      #
+  #     Labeled *Indeed*     #
+ #        For Results       #
+############################
+
+empties <- data.frame(title=character(),
+                    date=character(),
+                  company=character(), 
+                 salary=character(),
+                 maxsal=character(),
+                 minsal=character(),
+                 location=character(), 
+                 summary=character(), 
+                 links=character(),
+                 stringsAsFactors=FALSE) 
+for (i in seq(0, 800, 10)){
+  url_ds <- paste0('https://www.indeed.com/jobs?q=data%20scientist&l&vjk=dd25f8809ed80778',i)
+  var <- read_html(url_ds)
+  Sys.sleep(3)
+title <-  var %>% 
+      html_nodes('.jobtitle, #sja0 b') %>%
+    html_text() %>%
+      str_extract("(\\w+.+)+") 
+date <-  var %>% 
+      html_nodes('.date') %>%
+    html_text() %>%
+      str_extract("\\d+|Just posted|Today") 
+company <- var %>% 
+      html_nodes('.company') %>%
+    html_text() %>%
+      str_extract("(\\w+).+") 
+job_data <- var %>%
+    html_nodes('.salaryText') %>%
+    html_text()
+      salary <- str_remove_all(job_data, "\\d+.+ an hour| a year|\\$")
+      maxsal <- str_extract(job_data, "- \\$\\d+,\\d+ ") %>%
+       str_remove_all("- \\$| ")
+      minsal <- str_extract(job_data, "\\$\\d+,\\d+ ") %>%
+    str_remove_all(" |\\$")
+location <- var %>%
+        html_nodes('.location') %>%
+      html_text() %>%
+        str_extract("(\\w+.)+,.[A-Z]{2}")   
+summary <- var %>%
+        html_nodes('.summary') %>%
+      html_text() %>%
+        str_extract(".+")
+links <- var %>%
+        html_nodes('.jobtitle .turnstileLink, a.jobtitle') %>%
+      html_attr('href') 
+        link <- paste0("https://www.indeed.com",link)
+        
+Indeed <- rbind(empties, as.data.frame(cbind(title,
+                                                  date,
+                                                  company,
+                                                  salary,
+                                                  maxsal,
+                                                  minsal,
+                                                  location,
+                                                  summary,
+                                                  links
+                                                  )))
+}
+```
+
+Creates a data frame of the publicly posted jobs on Indeed at the time of the scrape called *Indeed*. It contains several attributes of the posted jobs, namely, the job title, the company name or employer,  location, job summary, and a link to the job page. 
+
+### Glassdoor Text Analysis
 
 This might be the best spot to demonstrate the results of a survey or another research example. 
 
@@ -52,4 +194,4 @@ Which are the most valued data science skills? How do we know? Did we learn anyt
 
 ## Sources
 
-Where did the data come from? 
+Where did the data come from? Who analyzed each part of the data?
