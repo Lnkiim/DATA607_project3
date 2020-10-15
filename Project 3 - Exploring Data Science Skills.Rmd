@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # DeleteMe Notes
 
 Delete these prior to posting.
+Zach and Rachel will reorder sections and make sure the heading levles are correct once we have all the code in the same RMD. 
 
 ```{r include=FALSE, message=FALSE}
 # This is formatted from a previous project. That example project can be found through the link:
@@ -35,6 +36,12 @@ library(readr)
 library(tidyverse)
 library(DT)
 library(xml2)
+
+# For graphing and nice tables
+library("ggplot2")
+library("rcartocolor")
+library("kableExtra")
+
 ```
 
 
@@ -448,7 +455,7 @@ Questions might include:
 
 Initial Run:
 
-```{r echo=FALSE}
+```{r echo=FALSE, eval = FALSE}
 url <- 'https://www.indeed.com/jobs?q=data%20scientist&l&vjk=00ba1a22ba67ffd2'
 webpage <- read_html(url)
 job_data_html <- html_nodes(webpage,'.jobtitle , #sja0 b') 
@@ -458,13 +465,13 @@ head(job_data)
 
 Found this string to be the most effective at parsing into usable form.
 
-```{r}
+```{r, eval = FALSE}
 str_extract(job_data, "(\\w+.+)+")
 ```
 
 Repeat process for salary. Might be best to have it as a separate analysis without it being attached to jobs directly. It requires a lot of cleaning and figuring out how to categorize the ranges to understand the distribution. 
 
-```{r}
+```{r, eval = FALSE}
 url <- 'https://www.indeed.com/jobs?q=data%20scientist&l&vjk=00ba1a22ba67ffd2'
 webpage <- read_html(url)
 sal_data_html <- html_nodes(webpage,'.salaryText') 
@@ -474,7 +481,7 @@ head(sal_data)
 
 Cleaning begins with:
 
-```{r}
+```{r, eval = FALSE}
 # Extracting the ranges provided as characters
 salary_data <- str_extract(job_data, "(\\w+.+)+") 
 # Removing the hourly rates - compare apples-apples
@@ -495,7 +502,7 @@ salary_data %>%
 
 Will need to run with more data to determine if effective. 
 
-```{r message=FALSE, include=FALSE}
+```{r message=FALSE, include=FALSE, eval = FALSE}
      ############################
     #      Do Not Run!         #
    #    See Data In Repo      #
@@ -564,6 +571,81 @@ Indeed <- rbind(empties, as.data.frame(cbind(title,
 ```
 
 Creates a data frame of the publicly posted jobs on Indeed at the time of the scrape called *Indeed*. It contains several attributes of the posted jobs, namely, the job title, the company name or employer,  location, job summary, and a link to the job page. 
+
+## Indeed Analysis
+
+The code above results in the CSV stored in our Github repository, which I'll read into a dataframe. 
+
+```{r}
+indeed_df <- read.csv(url("https://raw.githubusercontent.com/Lnkiim/DATA607_project3/main/Indeed.csv"), stringsAsFactors=FALSE)
+indeed_df$minsal <- str_remove(indeed_df$minsal, "[,]")
+indeed_df$minsal <- as.numeric(as.character(indeed_df$minsal))
+indeed_df$maxsal <- str_remove(indeed_df$maxsal, "[,]")
+indeed_df$maxsal <- as.numeric(as.character(indeed_df$maxsal))
+glimpse(indeed_df)
+```
+
+Our Indeed scrape provides information on job posting locations, companies, and salaries. First, we can see that by far the greatest number of job posting at the time of this scrape were in Washington, DC and Lexington Park, MD (and NA) with over 100 in each location. 
+
+```{r, message=FALSE}
+
+indeed_toploc <- count(indeed_df, location, sort=TRUE)
+indeed_toploc <- (top_n(indeed_toploc, 20))
+indeed_toploc <- indeed_toploc %>%
+  filter(rank(desc(n))<=50)
+
+kable(indeed_toploc, format = "markdown")
+
+indeed_toploc$location <- factor(indeed_toploc$location, levels = indeed_toploc$location[order(indeed_toploc$n)])
+
+ggplot(indeed_toploc, aes(x = n, y = location, fill = n)) +
+  geom_bar(stat="identity", fill="#53baa3") +
+  labs(title="Job Listings for Top 20 Locations") +
+  xlab('# of Listings') +
+  ylab('Locations')
+   
+
+```
+
+Taking a closer look, we see that for DC the postings primarily come from the CIA and the US Dept of the Treasury. All of the Lexington Park, MD postings are from the KBR. This is just a point-in-time snapshot of the job listings at the time of the scrape (during a strange economic time as well) - but it seems fair to conclude that in general the largest quantity of 'Data Science' jobs are available on the East Coast - one could say that proximity to a urban center is a desireable attribute for a data scientist, as that is where the work seems to be!
+
+```{r}
+indeed_dc <- subset(indeed_df, (location == "Washington, DC"))
+indeed_topdc <- count(indeed_dc, company, sort=TRUE)
+kable(top_n(indeed_topdc, 15), format = "markdown")
+
+indeed_lex <- subset(indeed_df, (location == "Lexington Park, MD"))
+indeed_toplex <- count(indeed_lex, company, sort=TRUE)
+kable(top_n(indeed_toplex, 15), format = "markdown")
+```
+
+
+Finally, looking at the salary ranges, where they were avaiable, we see that the mean minimum on the salary range is $83,578 and the mean maximum is $139,151. Further, the mean range of the salary is $55,623 - which is also plotted. While there are certainly many missing values, it's interesting to see the variation in the salary range offered from this Indeed scrape.
+
+```{r}
+
+mean(indeed_df$minsal, na.rm=TRUE)
+mean(indeed_df$maxsal, na.rm=TRUE)
+
+indeed_df <- indeed_df %>%
+  mutate(indeed_df, sal_range = maxsal - minsal)
+
+mean(indeed_df$sal_range, na.rm=TRUE)
+
+ggplot(indeed_df, aes(x = factor(sal_range), fill = sal_range)) +
+  geom_bar(fill="#53baa3") +
+  coord_flip() +  
+  labs(title="Frequency of Salary Ranges") +
+  xlab('Range (max-min)') +
+  ylab('Frequency') 
+
+
+```
+
+
+
+
+
 
 ### Glassdoor Text Analysis
 
