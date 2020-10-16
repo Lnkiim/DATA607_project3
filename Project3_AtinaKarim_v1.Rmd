@@ -266,7 +266,7 @@ knitr::kable(CloudPlatform)
 CloudPlatform$response[CloudPlatform$response == ""|CloudPlatform$response=="None"] <- NA
 ```
 
-For cloud platforms, we are only interested in seeing the combined results for the service provider. For instance, for AWS we are currently seeing 5 naming variations. We would like to  reconcile the naming variations under AWS to get the combined results. This applies to Azure and Google Cloud as well.
+For cloud platforms, we are only interested in seeing the combined results for the service provider. Therefore, we will combine the responses from Question 30 to only reflect the provider for the tool. For instance, for AWS we are currently seeing 5 naming variations. We would like to  reconcile the naming variations under AWS to get the combined results. This applies to Azure and Google Cloud as well.
 
 ```{r}
 x <- str_detect(CloudPlatform$response,"AWS")
