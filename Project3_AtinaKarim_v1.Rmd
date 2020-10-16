@@ -279,7 +279,10 @@ CloudPlatform$response <-ifelse(x,"Amazon Web Services (AWS)",CloudPlatform$resp
 CloudPlatform$response <-ifelse(y,"Microsoft Azure",CloudPlatform$response)
 CloudPlatform$response <-ifelse(z,"Google Cloud Platform",CloudPlatform$response)
 CloudPlatform <- na.omit(CloudPlatform)
-CloudPlatform
+CloudPlatform <-CloudPlatform %>% 
+    group_by(response) %>%
+      summarize(sum_response= sum(sum_response))
+knitr::kable(CloudPlatform)
 ```  
 
 ```{r}
