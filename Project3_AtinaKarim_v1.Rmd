@@ -213,20 +213,19 @@ PL$Response[PL$Response == ""|PL$Response =="None"] <- NA
 PL <-PL %>% 
     group_by(Response) %>%
       summarize(sum_response= sum(sum_response))
+PL <- na.omit(PL)
 knitr::kable(PL)
 ```
 
 ```{r}
 ggplot(data=PL, aes(x=Response,y=sum_response, fill=Response))+geom_col()+ geom_text(label=(PL$sum_response))+
   ggtitle("Programming Languages")
-## Overlap in labels
 ```
 
 2. Data Visualization
 ```{r}
 ggplot(data=q_20, aes(x=response,y=count_response, fill=response))+geom_col()+ geom_text(label=(q_20$count_response))+
   ggtitle("Data Visualization Tools")
-#Overlap in labels
 ```
 
 3. ML Tools/Products
@@ -241,7 +240,6 @@ knitr::kable(ML)
 ```{r}
 ggplot(data=ML, aes(x=response,y=sum_response, fill=response))+geom_col()+ geom_text(label=(ML$sum_response))+
   ggtitle("ML Tools and Products")
-## Where is the graph??
 ```
 4. ML Algorithm 
 
@@ -264,6 +262,9 @@ CloudPlatform <-CloudPlatform %>%
       summarize(sum_response= sum(count_response))
 knitr::kable(CloudPlatform)
 ```
+```{r}
+CloudPlatform$response[CloudPlatform$response == ""|CloudPlatform$response=="None"] <- NA
+```
 
 For cloud platforms, we are only interested in seeing the combined results for the service provider. For instance, for AWS we are currently seeing 5 naming variations. We would like to  reconcile the naming variations under AWS to get the combined results. This applies to Azure and Google Cloud as well.
 
@@ -277,6 +278,8 @@ z <- str_detect (CloudPlatform$response,"Google")
 CloudPlatform$response <-ifelse(x,"Amazon Web Services (AWS)",CloudPlatform$response)
 CloudPlatform$response <-ifelse(y,"Microsoft Azure",CloudPlatform$response)
 CloudPlatform$response <-ifelse(z,"Google Cloud Platform",CloudPlatform$response)
+CloudPlatform <- na.omit(CloudPlatform)
+CloudPlatform
 ```  
 
 ```{r}
