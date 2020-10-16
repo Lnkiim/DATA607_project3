@@ -320,37 +320,29 @@ OR  [Q5_OTHER_TEXT] like '%Programmer%'
 OR  [Q5_OTHER_TEXT] like '%Math%'")
 DataRoles
 ```
-### Responses
-We are primarily interested in extracting 'soft skills'data from this dataset.
+###Primary Tool
 
-We will also look at the survey question for which a significant number of respondents picked the 'other' option.
-
-### Soft skills
-It seems like we maybe able to get insights about soft skills from respondents who picked the other option for Question 9 (Select any activities that make up an important part of your role at work: (Select all that apply) 
-```{r}
-SoftSkills <- DataRoles %>% 
-  select("Q9_OTHER_TEXT")
-
-
-SoftSkills %>% 
-  gather(Q9other,response)  %>% 
-    group_by(response) %>%
-      summarize(count_reponse = n())
-```
-The only soft(ish) skill indicated by our data professionals (216 respondents) is the ability to build business cases for new model development and deployment (indicated by 1 respondent)
-
-### Tool
-
-The survey question where a significant amount of respondents picked the other option is Question 14 (What is the primary tool that you use at work or school to analyze data? (Include text response) - Selected Choice)
+The survey question where a significant amount of respondents picked the other option is Question 14 (What is the primary tool that you use at work or school to analyze data? (Include text response) - Selected Choice). Therefore, we would like to see if there are any other skillsets or tools here that are worth looking into besides the ones mentioned in the main dataset.
 
 ```{r}
 PrimaryTool <- DataRoles %>% 
   select("Q14_OTHER_TEXT")
 
-
-PrimaryTool %>% 
+PrimaryTool <-PrimaryTool %>% 
   gather(Q14other,response)  %>% 
     group_by(response) %>%
       summarize(count_reponse = n())
+PrimaryTool
 ```
+Respondents were allowed to input more than one answer in this field,i.e. one respondent can list multiple tools in their response, usually separated by a comma. We will therefore split the responses into separate columns first and then convert the dataset from wide to long.
+```{r}
+PrimaryTool <- separate(PrimaryTool,response,
+         into=c("T1","T2","T3"),
+         sep=",")
+PrimaryTool %>% gather(Tool,Response,
+        T1,T2,T3)%>% group_by(Response)%>%
+  summarize(Sum_response=sum(count_reponse))
+      
+```
+Looks like Python might be the winner here.
 
