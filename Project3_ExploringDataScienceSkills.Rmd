@@ -242,11 +242,19 @@ How is our review relevant to data science today? Why did we choose these exampl
 
 ## Kaggle Survey Data
 
+For three weeks from October 8 to October 28 of 2019 Kaggle conducted an industry-wide survey with 19,717 responses from individuals in the data science and machine learning fields. Responses were aggregated into a file with data from 171 countries and any country that had less than 50 responses was placed in an "other" category to preserve anonymity of the respondents. The data collected gives a comprehensive look at the state of the industry by asking questions about their education, workplace habits, tools in use and more. It was formatted as a multiple-choice survey wherein responses could be categorized into one of several options for each question. 
 
+We selected this data set to give us the most comprehensive look at the skills and general expectations of the data science and machine learning job market. We decided to select questions that were most relevant to our interests. Here are a few examples:
+
+    * What programming languages do you use on a regular basis?
+    * What programming language would you recommend an aspiring data scientist to learn first?
+    * Which of the following relational database products do you use on a regular basis?
+ 
+These were used in the analysis but prior to performing any computations, the data required cleaning. Due to the way the survey was shuffled to preserve anonymity, the responses needed to be organized into a format that was usable to analyze. With the multiple-choice responses uploaded to our database and GitHub repository as a spreadsheet (.csv) we began to organize and clean the data. 
 
 ### Tidying and Munging the Kaggle Data
 
-The 2019 Kaggle survey contains thirty-four questions and the corresponding recorded responses. The team decided to make a dataframe for each of the questions/responses. The code to accomplish this task is below for each dataframe.
+The 2019 Kaggle survey contains thirty-four questions and the corresponding recorded responses. We decided to make a dataframe for each of question and response. The code to accomplish this task is below for each dataframe. It is formatted for ease of viewing to see how each question was cleaned and summarized.
 
     Q1 - What is your age (# years)?
 
@@ -606,8 +614,7 @@ q_17 <- q_17[-1,]
 q_17
 ```
 
-In this first one, we could review the lit available from forums and publishers like Kaggle, Medium, Towards Data Science, Reddit, etc... then report on it.
-
+In this review of the Kaggle survey, we were able to summarize the selected multiple-choice responses. This allows us to see what respondents in the industry expect from new data scientists and it provided evidence of what to expect in the future. 
 
 ## Kaggle Analysis
 
