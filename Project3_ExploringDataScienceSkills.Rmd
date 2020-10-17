@@ -2,12 +2,15 @@
 title: "Project 3"
 author: "Team DAREZ"
 date: "10/5/2020"
-output: 
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
   html_document:
     df_print: paged
-    toc: true
-    toc_float: true
-    toc_collapsed: true
+    toc: yes
+    toc_float: yes
+    toc_collapsed: yes
     toc_depth: 3
 ---
 
@@ -28,14 +31,21 @@ Zach and Rachel will reorder sections and make sure the heading levles are corre
 
 # Introduction
 
+As recent as March of 2019 we are still hearing repeatedly that the demand of data scientists is not being met. The University of Pennsylvania states "Data analytics is becoming mission-critical to more and more businesses." They quote LinkedIn co-found Allen Blue saying, "There are very few data scientists out here passing out their resumes. Data scientists are almost all already employed, because they're so much in demand." (https://knowledge.wharton.upenn.edu/article/whats-driving-demand-data-scientist/) 
+
+Data scientists come in many different flavors and from many different backgrounds as well, so often it comes down to having the right set of skills for the job. So what are those specific skills, other than it saying "data scientist" on your business card, that are in demand?
+
+We set out to use our growing data science skills to begin looking at the data on what skills are in demand for data science. We chose to use 3 datasets, each looking at a slightly different angle of the question, "Which are the most valued data science skills?"
+First, we look at the 2019 Kaggle Survey on Data Science and Machine Learning. This massive, world-wide survey asks some pertinent questions of what specific tools and skills current practitioners are using. Next, we access a scrape of Glassdoor job postings that bring in the perspective of what hiring companies are asking for. Finally, a scrape of Indeed job postings is used to look at trends such as job locations and salaries as in a sense, these tell us what the job market expects of data scientists on a larger scale in terms of where we are willing to live and what salary is acceptable.
+
 Example paragraph:
 An October 2012 Harvard Business Review article called Data Scientist the “sexiest job of the 21st century.” In 21st-century time, 2012 is eons ago. Glassdoor, the popular career and company review site, has named Data Scientist the best job in America for three years running. We hear tales of huge starting salaries and high demand for talent. Still, for a number of reasons, we’re cautious.
 
 ## Setup 
 
-How did we gather the data? What tools did we use? Examplain our setup for the analysis
+How did we gather the data? What tools did we use? Explain our setup for the analysis.
 
-```{r}
+```{r message = FALSE}
 # For Web-scrap of Indeed
 library(rvest)
 library(readr)
@@ -78,10 +88,9 @@ library (stringr)
 
 ### Database Connection: Azure
 
+We decided to store our data in an Azure online database. We created an account and initialized the database. We set up permissions and granted each user access to the database using their IP addresses. This was our way of organizing and accessing the data from a database source. 
 
-We wanted to store our data in an Azure online database. Atina created an account and initialized the database. She set up permissions and granted each user access to the databased based on their IP addresses.
-
-Douglas created tables for each of the data sources and imported the data to each table, saving the import packages as SSIS (.dtsx) files. The initial tables included one table for the survey information from both indeed and Glassdoor, and three tables to store the Kaggle survey data. He also created a "read only" user account that was shared with each of the team members so that they could read the data. The "read only" connection is in the code below:
+We created tables for each of the data sources and imported the data to each table, saving the import packages as SSIS (.dtsx) files. The initial tables included one table for the survey information from both indeed and Glassdoor, and three tables to store the Kaggle survey data. We also created a "read only" user account that was shared with each of the team members so that they could read the data. The "read only" connection is in the code below:
 
 ```{r Azure_connection}
 library(odbc) # create connection to SQL database
@@ -933,24 +942,11 @@ Looks like Python might be the winner here.
 
 ## Indeed Scrape
 
-Here, we could perform a small web-scraping study of a popular job site like Indeed and review the data for confirmation or denial of example 1.
+We performed multiple web-scrapes of Indeed.com to collect data on real-world examples of jobs with the title "data scientist." These data were intended to give further insight into the expectations of the market such as where data scientists’ jobs are located and the salaries. Thus, we looked for the looked for those markers of job title, company, salary ranges and location of each posting. 
 
-Questions might include: 
-  * What was the search for?  
-    - i.e. title of data science
-  * How many jobs in this scrape?
-  * Where are they located?
-  * What skills are required/preferred?
-    - Are there any repeats?
-    - Are most soft or hard skills?
-  * What is the minimum experience?
-  * What company is hiring the most?
-  * How frequently are new jobs posted?
-  * What is the average salary? 
+Our initial scrape was compiled to create a sample for analysis. In this, we only wanted to create a data frame with the job title from the first page of results in the Indeed job search. A regular expression in conjunction with functions from the rvest package allowed the information to be extracted from the html of the webpage. The first scraping example is displayed below. 
 
-Initial Run:
-
-```{r echo=FALSE, eval = FALSE}
+```{r eval = FALSE}
 url <- 'https://www.indeed.com/jobs?q=data%20scientist&l&vjk=00ba1a22ba67ffd2'
 webpage <- read_html(url)
 job_data_html <- html_nodes(webpage,'.jobtitle , #sja0 b') 
@@ -958,44 +954,46 @@ job_data <- html_text(job_data_html)
 head(job_data)
 ```
 
-Found this string to be the most effective at parsing into usable form.
+In each case, the data was extracted as a text file and was rife with errors. It was not usable at this stage. Another parameter was necessary to clean the data and transform it into something functional. In this case, we decided a vector of characters would suffice. The example of the regular expression used to extract the job title of each posting on the first webpage of Indeed for this singular sample is shown.  
 
 ```{r, eval = FALSE}
 str_extract(job_data, "(\\w+.+)+")
 ```
 
-Repeat process for salary. Might be best to have it as a separate analysis without it being attached to jobs directly. It requires a lot of cleaning and figuring out how to categorize the ranges to understand the distribution. 
+We found this string to be the most effective at parsing the job title of all listing on the first page into usable form. We repeated this process until we had a clear understanding of each variable of interest to us available on the webpage. 
+
+Some information presented challenges that were not transforming data types or parsing strings but rather developing a standard quantifiable value from a range of numbers in different units and categories. A good example of this is the monetary information where, the employers listed the information as a range of values per year, per hour, and contractual amounts. None of which would be remotely close when performing calculations. 
+
+To solve this, we separated the information we had into categories and selected the category with the most results. Those with a salary listed as a range per year had the highest proportion of jobs of those jobs with any monetary information on its posting. The process of cleaning can be seen here:
 
 ```{r, eval = FALSE}
+# Performing the 1-page scrape and producing a text file from the html of indeed.com
 url <- 'https://www.indeed.com/jobs?q=data%20scientist&l&vjk=00ba1a22ba67ffd2'
 webpage <- read_html(url)
 sal_data_html <- html_nodes(webpage,'.salaryText') 
-sal_data <- html_text(sal_data_html)
+sal_data <- html_text
+# Cleaning the subset begins with evaluation of the data
 head(sal_data)
-```
-
-Cleaning begins with:
-
-```{r, eval = FALSE}
-# Extracting the ranges provided as characters
+# Extracting the salary ranges provided as characters 
 salary_data <- str_extract(job_data, "(\\w+.+)+") 
-# Removing the hourly rates - compare apples-apples
+# Removing the hourly rates - a smaller group than salary range
 salary_data <- str_remove_all(salary_data, "\\d+ an hour")
-# Remove the label " a year" since all shoudl be 
+# Remove the label " a year" since all should be at this stage
 salary_data <- str_remove_all(salary_data, " a year")
-# Remove the dollar sign
+# Remove the dollar sign - they are all dollars
 salary_data <- str_remove_all(salary_data,"\\$")
-# Anticipating duplcicates - testing a solution
+# Anticipating duplicates - testing a solution
 salary_data <- as.data.frame(salary_data)
 salary_data[2,1] <- ("70,000 - $90,000")
 salary_data %>% 
   mutate(salary = as.factor(job_data)) %>%
   count(salary)
-
-
 ```
 
-Will need to run with more data to determine if effective. 
+As with all samples, there were missing values inherent to the postings on Indeed. Salary information was no exception. These missing values were included in the dataset but were not included in the analysis. To determine how well these chunks of code ran with the full data from the indeed search, we ran it in for-loops to collect pages of job information.   
+
+In total, there were at least 18 scrapes performed, two for each variable in the data frame (a sample and a full run). With the html to text data from each sample being pulled from a different section on the webpage, they often required a unique regular expression to produce functional data types. To ensure we could manipulate the data for analysis, the resultant text strings were all converted a data frame as characters. That complete progression of extraction and cleaning was run with the following code. Each variable was stored in its own column and each observation has its own row.  
+
 
 ```{r message=FALSE, include=FALSE, eval = FALSE}
      ############################
@@ -1065,7 +1063,7 @@ Indeed <- rbind(empties, as.data.frame(cbind(title,
 }
 ```
 
-Creates a data frame of the publicly posted jobs on Indeed at the time of the scrape called *Indeed*. It contains several attributes of the posted jobs, namely, the job title, the company name or employer,  location, job summary, and a link to the job page. 
+This creates a data frame of the publicly posted jobs with the title "data scientist" on Indeed on October 13, 2020 called *Indeed*. It contains several attributes of the posted jobs, namely, the job title, the company name or employer, location, job summary, and a link to the original posting webpage. Data is then exported as a spreadsheet (.csv) and uploaded to our GitHub repository to make it more accessible and reproducible.  
 
 ### Indeed Analysis
 
@@ -1080,7 +1078,7 @@ indeed_df$maxsal <- as.numeric(as.character(indeed_df$maxsal))
 glimpse(indeed_df)
 ```
 
-Our Indeed scrape provides information on job posting locations, companies, and salaries. First, we can see that by far the greatest number of job posting at the time of this scrape were in Washington, DC and Lexington Park, MD (and NA) with over 100 in each location. 
+Our Indeed scrape provides information on job posting locations, companies, and salaries. First, we can see that by far the greatest number of job posting at the time of this scrape were in Washington, DC and Lexington Park, MD (and NA) with over 100 in each location. Given the current state of global affairs, these "NA" locations could represent a higher number of remote jobs due to the COVID-19 pandemic. It may also be the case that the employers have multiple locations listed as some cases show. This presents room for further analysis. 
 
 ```{r, message=FALSE}
 
@@ -1102,7 +1100,7 @@ ggplot(indeed_toploc, aes(x = n, y = location, fill = n)) +
 
 ```
 
-Taking a closer look, we see that for DC the postings primarily come from the CIA and the US Dept of the Treasury. All of the Lexington Park, MD postings are from the KBR. This is just a point-in-time snapshot of the job listings at the time of the scrape (during a strange economic time as well) - but it seems fair to conclude that in general the largest quantity of 'Data Science' jobs are available on the East Coast - one could say that proximity to a urban center is a desireable attribute for a data scientist, as that is where the work seems to be!
+Taking a closer look, we see that for DC the postings primarily come from the CIA and the US Dept of the Treasury. All of the Lexington Park, MD postings are from the KBR. This is just a point-in-time snapshot of the job listings at the time of the scrape (during a strange economic time as well) - but it seems fair to conclude that in general the largest quantity of 'Data Science' jobs are available on the East Coast - one could say that proximity to a urban center is a desirable attribute for a data scientist, as that is where the work seems to be!
 
 ```{r}
 indeed_dc <- subset(indeed_df, (location == "Washington, DC"))
@@ -1114,8 +1112,7 @@ indeed_toplex <- count(indeed_lex, company, sort=TRUE)
 kable(top_n(indeed_toplex, 15), format = "markdown")
 ```
 
-
-Finally, looking at the salary ranges, where they were avaiable, we see that the mean minimum on the salary range is $83,578 and the mean maximum is $139,151. Further, the mean range of the salary is $55,623 - which is also plotted. While there are certainly many missing values, it's interesting to see the variation in the salary range offered from this Indeed scrape.
+Finally, looking at the salary ranges, where they were available, we see that the mean minimum on the salary range is $83,578 and the mean maximum is $139,151. Further, the mean range of the salary is $55,623 - which is also plotted. While there are certainly many missing values, it is interesting to see the variation in the salary range offered from this Indeed scrape.
 
 ```{r}
 
@@ -1464,7 +1461,7 @@ Which are the most valued data science skills? How do we know? Did we learn anyt
 
 Where did the data come from? Who analyzed each part of the data?
 
-> Douglas Barley:
+> Douglas Barley: 
 > Atina Karim:
 > Rachel Greenlee:
 > Ellen Kim: 
