@@ -809,14 +809,32 @@ knitr::kable(PL)
 ```
 
 ```{r}
-ggplot(data=PL, aes(x=Response,y=sum_response, fill=Response))+geom_col()+ geom_text(label=(PL$sum_response))+
-  ggtitle("Programming Languages")
+
+PL$Response <- factor(PL$Response, levels = PL$Response[order(PL$sum_response)])
+
+ggplot(data=PL, aes(x=Response,y=sum_response, fill=Response))+
+  geom_col(fill="#53baa3") + 
+  geom_text(label=(PL$sum_response)) +
+  ggtitle("Frequency of Respondents Selecting Programming Languages") +
+  coord_flip() +  
+  xlab('Response Count') +
+  ylab('Pramming Languages') 
 ```
 
 2. Data Visualization
 ```{r}
-ggplot(data=q_20, aes(x=response,y=count_response, fill=response))+geom_col()+ geom_text(label=(q_20$count_response))+
-  ggtitle("Data Visualization Tools")
+q_20$response <- factor(q_20$response, levels = q_20$response[order(q_20$count_response)])
+
+q_20graph <- q_20[-c(1), ]
+
+ggplot(data=q_20graph, aes(x=response,y=count_response, fill=response))+
+  geom_col(fill="#53baa3")+ 
+  geom_text(label=(q_20graph$count_response))+
+  ggtitle("Frequency of Respondents Selecting Data Visualization Tools") +
+  coord_flip() +  
+  xlab('Response Count') +
+  ylab('Data Visualization Tools') 
+  
 ```
 
 3. ML Tools/Products
@@ -837,14 +855,37 @@ ggplot(data=q_20, aes(x=response,y=count_response, fill=response))+geom_col()+ g
 4. ML Algorithm 
 
 ```{r}
-ggplot(data=q_24, aes(x=response,y=count_response, fill=response))+geom_col()+ geom_text(label=(q_24$count_response))+
-  ggtitle("ML Algorithms")
+
+q_24$response <- factor(q_24$response, levels = q_24$response[order(q_24$count_response)])
+
+q_24graph <- q_24[-c(1), ]
+
+
+ggplot(data=q_24graph, aes(x=response,y=count_response, fill=response)) +
+  geom_col(fill="#53baa3") + 
+  geom_text(label=(q_24graph$count_response)) +
+  ggtitle("Freq of Respondents Selecting ML Algorithms") +
+  coord_flip() +  
+  xlab('Response Count') +
+  ylab('ML Algorithms')
+  
+
 ```
 
 5. ML Framework
 ```{r}
-ggplot(data=q_28, aes(x=response,y=count_response, fill=response))+geom_col()+ geom_text(label=(q_28$count_response))+
-  ggtitle("ML Framework")
+q_28$response <- factor(q_28$response, levels = q_28$response[order(q_28$count_response)])
+
+q_28graph <- q_28[-c(1), ]
+
+ggplot(data=q_28graph, aes(x=response,y=count_response, fill=response)) +
+  geom_col(fill="#53baa3") + 
+  geom_text(label=(q_28graph$count_response)) +
+  ggtitle("Freq of Respondents Selecting ML Frameworks") +
+  xlab('Response Count') +
+  ylab('ML Frameworks') +
+  coord_flip()
+
 ```
 6. Cloud Platforms
 
@@ -879,8 +920,22 @@ knitr::kable(CloudPlatform)
 ```  
 
 ```{r}
-ggplot(data=CloudPlatform, aes(x=response,y=sum_response, fill=response))+geom_col()+ geom_text(label=(CloudPlatform$sum_response))+
-  ggtitle("Cloud Platforms")
+
+CloudPlatform$response <- factor(CloudPlatform$response, levels = CloudPlatform$response[order(CloudPlatform$sum_response)])
+
+CloudPlatformgraph <- CloudPlatform[-c(1), ]
+
+
+ggplot(data=CloudPlatformgraph, aes(x=response,y=sum_response, fill=response)) + 
+  geom_col(fill="#53baa3") + 
+  geom_text(label=(CloudPlatformgraph$sum_response)) +
+  ggtitle("Freq of Selected Cloud Platforms") +
+  xlab('Response Count') +
+  ylab('Cloud Platforms') +
+  coord_flip()
+
+
+
 ```
 
 
