@@ -31,14 +31,12 @@ library(ggraph)
 
 ```{r results = 'hide'}
 gd_url="https://raw.githubusercontent.com/Lnkiim/DATA607_project3/main/glassdoor_ds_jobs.csv"
-gd_df <- read_csv(url(gd_url))
-# gd_sample <- gd_df[1:4,]
+gd_df <- read_csv(url(gd_url)) 
 ```
 
-
-
-### Examining Most desired traits based on most frequently occcuring words in dataset. 
-Globally what are the most frequently occuring words across all job descriptions?
+ 
+### Most frequently occcuring words in dataset
+As a first iteration of the analysis, we looked at the most frequently occuring words across all job descriptions. Notice in the code, that we anti_join with 'stop words'. 'Stop words' are lexicons that are commonly occuring words that are usually functional in syntax but provide little content (eg: in, the, who, was). This will make our dataset smaller and more performant for further manipulation.
 
 ```{r}
 
@@ -64,6 +62,8 @@ global_word_count %>%
 
 ```
 #### Word Cloud for most frequently occuring words 
+We can see here, there isn't much insight as to what makes a great data scientist.
+
 ```{r}
 
 # Words must have occured in the dataset at least 100 times.
@@ -73,11 +73,10 @@ tidy_gd_df %>%
   count(word) %>%
   with(wordcloud(word, n, max.words = 100))
 ```
+ 
+### What technical tools are most sought after?
 
-
-
-### What technical skills are most sought after?
-Methodology: Look at most frequently occuring words. This is appropriate because tools are usually named as single words. We start by curating a list of technical skills and see how frequently these words appear in our Glassdoor job description dataset. Instead of scraping a list of technical skills/tools from scratch, we started with some tools that appeared in the Kaggle Survey dataset. After analyzing the results with just the tools that appeared in the Kaggle survey, we found that the data was sparse and hypothesized that the list of technical skills was not inclusive enough to capture the story behind the Glassdoor dataset. Hence, we manually entered more frequently used engineering tools and got better results. 
+To investigate which technical skills are most sought after, we investigated which words are more frequently occurring. This is appropriate because tools are often named as single words. We start by curating a list of technical skills and see how frequently these words appear in our Glassdoor job description dataset. Instead of scraping a list of technical skills/tools from scratch, we started with some tools that appeared in the Kaggle Survey dataset. After analyzing the results with just the tools that appeared in the Kaggle survey, we found that the data was sparse and hypothesized that the list of technical skills was not inclusive enough to capture the story behind the Glassdoor dataset. Hence, we manually entered more frequently used engineering tools and got better results. 
 
 ```{r}
 # reading raw csv but probably more ideal to bring data from database
@@ -135,9 +134,17 @@ technical_traits <- trimws(technical_traits, which = c("both"))
 # Global Words that intersect with list of scraped technical traits
 technical_skills <- tidy_gd_df %>%
   filter(word %in% technical_traits) 
+
+technical_word_count <-
+  technical_skills %>%
+    count(word, sort = TRUE) 
+
+technical_word_count
+
 ```
 
-### Wordcloud for technical traits
+### Wordcloud for technical tools
+We can see from the Wordcloud and the dataframe, Python and SQL are the most sought after technical skills by a significant margin. The second and third sought more frequently sought after tools include Spark and Tableau but the large gap between the top two and the next two, suggests that there are technical skills which may not be single word tools. We investigated further it more advanced natural language processing frameworks.
 
 ```{r}
 technical_skills %>% 
@@ -146,69 +153,14 @@ technical_skills %>%
 ```
 
 ```{r}
-technical_skills
-library(ggplot2)
-
-p <- ggplot(data= technical_skills, aes(x=word, y=len)) +
-  geom_bar(stat="identity")
-
-p
-
+# maybe add a bar graph 
+# x= word, count for the sill 
 ```
 
-### What words were more 
-tf vs TF_IDF
-whats the difference?
-Why do we care?
-
-```{r}
+### TF and TF-IDF
+In the previous section we looked at which words were mentioned the most frequently across all job descriptions on Glassdoor. In this section, we investigated which traits of a data scientist were most desirable by term frequency. Term frequency here is defined a little differently than a global word count because this calculation is grouped by 'document' (which is our use case is a company). This means that the frequency of a word, takes into account how many times a word was mentioned relative to the total word count of company. Next we looked at TF-IDF which is another way evaluating if a word is signficant. Previously we looked at popular a word was, with tf-idf, we're looking to measure the rarity of a word. Oftentimes, uniquely used words will give us some insight about the entire document, more than the most popular word.
  
-# grouped so that each person is a "document" and each word is a "token"
-
-term_freq <- gd_sample_df %>%
-  anti_join( stop_words, by="word") %>%
-    group_by(job_id) %>%
-      count(word, sort = TRUE) 
-
-term_freq <-
-  term_freq %>%
-    mutate(tot_word_count = sum(n))
-
-term_freq_by_rank <- term_freq %>% 
-  mutate(rank = row_number(), 
-         term_freq = n/tot_word_count)
-
-# bind_tf_idf
-term_freq_by_rank <-
-  term_freq_by_rank %>%
-    bind_tf_idf(word, job_id, n) %>%
-    arrange(desc(tf_idf))
-
-
-# term frequency when glassdoor is a document
  
-sample_freq_by_rank <- sample_freq %>% 
-  mutate(rank = row_number(), 
-         term_freq = n/tot_word_count)
-
-sample_freq_by_rank %>%
-  bind_tf_idf(word,source, n) %>%
-  arrange(desc(tf_idf))
-
-
-book_words <- book_words %>%
-  bind_tf_idf(word, book, n)
-
-# what words are most rare? 
-```
-
-
-
-
-### FULL DATASET
-Each document should be a company
-
-How is this different from popular count vs tf- idf?
 ```{r}
 
 # grouped so that each company is a "document" and each word is a "token"
@@ -234,14 +186,19 @@ term_freq_by_rank <-
 
 ```
 
+Unfortuntately, the tf-idf doesn't give us much helpful additional insight in discovering which traits make a most desirable data scientist. However, it does show us that the top words are jargon that specific to a specialized industry. (eg: arbitrage, banking, scm).
 
+
+### Discovering Popular Soft and Technical Skills with n-grams
+As mentioned previously, its reasonable to search for *tools* with a global count because tools are often single words. However, soft skills and technical skills may be expressed more frequently with two words, or perhaps even three words. In this section we look at n_grams, which is an investigation as to how often n number of words occur together. 
+
+ 
 
 ```{r}
 
 subset_gd_df <- gd_df[,c(3,5)]
  
 # common pairs of words
-
 gd_bigrams <- subset_gd_df  %>% 
   unnest_tokens(bigram, Summary, token = "ngrams", n = 2)
 
@@ -254,22 +211,22 @@ bigrams_separated <- bigrams_separated %>%
 
 bigram_counts <- bigrams_separated %>% 
   count(word1, word2, sort = TRUE)
+```
 
+Here we can see that the most frequently occuring couplings of words, do illustrate the most sought after technical and soft skills. 
+```{r}
+bigram_counts
+```
+Here we're able to visualize the relationship between couplings of words. The darkness of the arrow expresses how strong the relationship between two words is, and the arrow indicates the direction of the relationship. Using n-grams when n equals 2 lists a lot of technical skills, some of which include: 'machine learning', 'data analytics', 'communication skills', 'data mining','deep learning'.
+
+```{r}
 set.seed(2022) 
 
 bigram_graph <- bigram_counts %>%
   filter(n > 120) %>%
   graph_from_data_frame()
 
-ggraph(bigram_graph, layout = "fr") +
-  geom_edge_link() +
-  geom_node_point() +
-  geom_node_text(aes(label = name), vjust = 1, hjust = 1)
 
-```
-
-```{r}
-set.seed(2022)
 a <- grid::arrow(type = "closed", length = unit(.05, "inches"))
 
 ggraph(bigram_graph, layout = "fr") +
@@ -278,14 +235,10 @@ ggraph(bigram_graph, layout = "fr") +
   geom_node_point(color = "lightblue", size = 3) +
   geom_node_text(aes(label = name), vjust = 1, hjust = 1, size=2) +
   theme_void()
-
-
 ```
 
-
-
+Looking at n-grams where n equals three shows us many more soft skills that are sought after. Some of the most sought after soft skills include: written comunication skills, fast paced environment, cross functional teams, verbal communication skills, agile software development, and strong analytical skills. 
 ```{r}
-
 
 # common 3 words 
 
@@ -303,34 +256,9 @@ trigrams_separated <- gd_trigrams_separated %>%
 trigrams_counts <- trigrams_separated %>% 
   count(word1, word2,word3, sort = TRUE)
 
+trigrams_counts
 ```
 
 
 
-
-### Sample Dataframe - DELETE ONCE EVERYTHING WORKS
-Smaller and easier to test transformations on 
-
-```{r}
-# create pk -> job_id
-gd_sample <-
-  gd_sample %>% 
-    mutate(job_id = row_number())
-
-gd_sample_df <- gd_sample %>%
-  unnest_tokens(word, Summary)
-
-# remove words that don't mean much
-tidy_gd_sample <- gd_sample_df %>%
-  anti_join( stop_words, by="word")
-
-sample_freq <- tidy_gd_sample %>%
-  count(word, sort = TRUE) 
-
-tidy_gd_sample %>%
-  anti_join(stop_words) %>%
-  count(word) %>%
-  with(wordcloud(word, n, max.words = 100))
-
-```
-
+ 
