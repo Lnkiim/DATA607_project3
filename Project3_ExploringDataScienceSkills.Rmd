@@ -3,15 +3,15 @@ title: "Project 3"
 author: "Team DAREZ"
 date: "10/5/2020"
 output:
-  pdf_document:
-    toc: yes
-    toc_depth: '3'
   html_document:
     df_print: paged
     toc: yes
     toc_float: yes
     toc_collapsed: yes
     toc_depth: 3
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
 ---
 
 ```{r setup, include=FALSE}
@@ -163,7 +163,7 @@ head(df_survey_schema)
 
 ...this one is rather large, it takes several minutes to load...
 
-``` {r read_survey_multi_choice, eval = FALSE}
+``` {r read_survey_multi_choice}
 # read survey multiple choice data into a data frame named "df_survey_multi_choice"
 
 df_survey_multi_choice <- dbGetQuery(my_connection,'
@@ -609,15 +609,11 @@ q_17
 In this first one, we could review the lit available from forums and publishers like Kaggle, Medium, Towards Data Science, Reddit, etc... then report on it.
 
 
-## Glassdoor Analysis
+## Kaggle Analysis
 
 #### Dataset:Multiple Choice Responses
 ```{r}
 Data <- dbGetQuery(my_connection,"Select * FROM dbo.multiple_choice_responses")
-```
-
-```{r table-kaggle}
-knitr::kable(Data,caption='Kaggle Survey Responses')
 ```
 
 Converting to a tibble
@@ -636,7 +632,7 @@ DataScientists <- filter (Data_Tibble,Q5 == "Data Scientist" | Q5 == "Data Analy
 We are going to store the responses for **questions 18-34** in separate data frames (q_18,q_19,q_20 and so on till q_34).However, we have excluded questions that are not relevant for our analysis (non skills based questions) 
 
 Question 18:What programming languages do you use on a regular basis?
-```{r}
+```{r, message=FALSE}
 q_18 <- DataScientists %>% 
   select(starts_with("Q18")& !"Q18_OTHER_TEXT")
 q_18 <-q_18 %>% 
@@ -645,7 +641,7 @@ q_18 <-q_18 %>%
       summarize(count_response = n())
 ```
 Question 19: What programming language would you recommend an aspiring data scientist to learn first?
-```{r}
+```{r, message = FALSE}
 q_19 <- DataScientists %>% 
   select(starts_with("Q19")& !"Q19_OTHER_TEXT")
 q_19 <- q_19 %>% 
@@ -654,7 +650,7 @@ q_19 <- q_19 %>%
       summarize(count_response = n())
 ```
 Question 20: What data visualization libraries or tools do you use on a regular basis? 
-```{r}
+```{r, message = FALSE}
 q_20 <- DataScientists %>% 
   select(starts_with("Q20")& !"Q20_OTHER_TEXT")
 
@@ -664,7 +660,7 @@ q_20 <-q_20 %>%
       summarize(count_response = n())
 ```
 Question 24: Which of the following ML algorithms do you use on a regular basis? 
-```{r}
+```{r, message = FALSE}
 q_24 <- DataScientists %>% 
   select(starts_with("Q24")& !"Q24_OTHER_TEXT")
 
@@ -674,7 +670,7 @@ q_24 <-q_24 %>%
       summarize(count_response = n())
 ```
 Question 25: Which categories of ML tools do you use on a regular basis?
-```{r}
+```{r, message = FALSE}
 q_25 <- DataScientists %>% 
   select(starts_with("Q25")& !"Q25_OTHER_TEXT")
 q_25 <-q_25 %>% 
@@ -683,7 +679,7 @@ q_25 <-q_25 %>%
       summarize(count_response = n())
 ```
 Question 26: Which categories of computer vision methods do you use on a regular basis?
-```{r}
+```{r, message = FALSE}
 q_26 <- DataScientists %>% 
   select(starts_with("Q26")& !"Q26_OTHER_TEXT")
 q_26 %>% 
@@ -693,7 +689,7 @@ q_26 %>%
 
 ```
 Question 27: Which of the following natural language processing (NLP) methods do you use on a regular basis?
-```{r}
+```{r, message= FALSE}
 q_27 <- DataScientists %>% 
   select(starts_with("Q27")& !"Q27_OTHER_TEXT")
 q_27 %>% 
@@ -702,7 +698,7 @@ q_27 %>%
       summarize(count_response = n())
 ```
 Question 28: Which of the following machine learning frameworks do you use on a regular basis?
-```{r}
+```{r, message = FALSE}
 q_28 <- DataScientists %>% 
   select(starts_with("Q28")& !"Q28_OTHER_TEXT")
 q_28 <-q_28 %>% 
@@ -711,7 +707,7 @@ q_28 <-q_28 %>%
       summarize(count_response = n())
 ```
 Question 29: Which of the following cloud computing platforms do you use on a regular basis? 
-```{r}
+```{r, message = FALSE}
 q_29 <- DataScientists %>% 
   select(starts_with("Q29")& !"Q29_OTHER_TEXT")
 
@@ -721,7 +717,7 @@ q_29 <-q_29 %>%
       summarize(count_response = n())
 ```
 Question 30: Which specific cloud computing products do you use on a regular basis? 
-```{r}
+```{r, message = FALSE}
 q_30 <- DataScientists %>% 
   select(starts_with("Q30")& !"Q30_OTHER_TEXT")
 q_30 <- q_30 %>% 
@@ -730,7 +726,7 @@ q_30 <- q_30 %>%
       summarize(count_response = n())
 ```
 Question 31: Which specific big data / analytics products do you use on a regular basis?
-```{r}
+```{r, message = FALSE}
 q_31 <- DataScientists %>% 
   select(starts_with("Q31")& !"Q31_OTHER_TEXT")
 
@@ -741,7 +737,7 @@ q_31 %>%
       summarize(count_response = n())
 ```
 Question 32: Which of the following machine learning products do you use on a regular basis? 
-```{r}
+```{r, message = FALSE}
 q_32 <- DataScientists %>% 
   select(starts_with("Q32")& !"Q32_OTHER_TEXT")
 q_32<- q_32 %>% 
@@ -750,7 +746,7 @@ q_32<- q_32 %>%
       summarize(count_response = n())
 ```
 Question 33: Which automated machine learning tools (or partial AutoML tools) do you use on a regular basis? 
-```{r}
+```{r, message = FALSE}
 q_33 <- DataScientists %>% 
   select(starts_with("Q33")& !"Q33_OTHER_TEXT")
 q_33 <-q_33 %>% 
@@ -759,7 +755,7 @@ q_33 <-q_33 %>%
       summarize(count_reponse = n())
 ```
 Question 34: Which of the following relational database products do you use on a regular basis? 
-```{r}
+```{r, message = FALSE}
 q_34 <- DataScientists %>% 
   select(starts_with("Q34")& !"Q34_OTHER_TEXT")
 q_34 <-q_34 %>% 
@@ -788,7 +784,7 @@ We are particularly interested in understanding what the most cited tools or ski
 
 We will combine the individual data frame for each question first before plotting the data.
 
-```{r}
+```{r, message = FALSE}
 PL <- rbind(q_18,q_19)
 PL <-PL %>% 
     group_by(Response) %>%
@@ -796,7 +792,7 @@ PL <-PL %>%
 knitr::kable(PL)
 ```
 We don't need to see the blank responses
-```{r}
+```{r, message = FALSE}
 PL$Response[PL$Response == ""|PL$Response =="None"] <- NA
 PL <-PL %>% 
     group_by(Response) %>%
@@ -818,16 +814,18 @@ ggplot(data=q_20, aes(x=response,y=count_response, fill=response))+geom_col()+ g
 
 3. ML Tools/Products
 
+############################## ANGRY ERROR ########################
+
 ```{r}
-ML <- rbind(q_25,q_32,q_33)
-ML <-ML %>% 
-    group_by(response) %>%
-      summarize(sum_response= sum(count_response))
-knitr::kable(ML)
+#ML <- rbind(q_25,q_32,q_33)
+#ML <-ML %>% 
+#    group_by(response) %>%
+#      summarize(sum_response= sum(count_response))
+#knitr::kable(ML)
 ```
 ```{r}
-ggplot(data=ML, aes(x=response,y=sum_response, fill=response))+geom_col()+ geom_text(label=(ML$sum_response))+
-  ggtitle("ML Tools and Products")
+#ggplot(data=ML, aes(x=response,y=sum_response, fill=response))+geom_col()+ geom_text(label=(ML$sum_response))+
+#  ggtitle("ML Tools and Products")
 ```
 4. ML Algorithm 
 
@@ -1146,10 +1144,10 @@ This might be the best spot to demonstrate the results of a survey or another re
 
 Reading in Data
 
-```{r results = 'hide'}
+```{r results = 'hide', message = FALSE}
 gd_url="https://raw.githubusercontent.com/Lnkiim/DATA607_project3/main/glassdoor_ds_jobs.csv"
 gd_df <- read_csv(url(gd_url))
-# gd_sample <- gd_df[1:4,]
+gd_sample <- gd_df[1:4,]
 ```
 
 
@@ -1197,7 +1195,7 @@ tidy_gd_df %>%
 ### What technical skills are most sought after?
 Methodology: Look at most frequently occuring words. This is appropriate because tools are usually named as single words. We start by curating a list of technical skills and see how frequently these words appear in our Glassdoor job description dataset. Instead of scraping a list of technical skills/tools from scratch, we started with some tools that appeared in the Kaggle Survey dataset. After analyzing the results with just the tools that appeared in the Kaggle survey, we found that the data was sparse and hypothesized that the list of technical skills was not inclusive enough to capture the story behind the Glassdoor dataset. Hence, we manually entered more frequently used engineering tools and got better results. 
 
-```{r}
+```{r, message = FALSE}
 # reading raw csv but probably more ideal to bring data from database
 url_mult_response="https://raw.githubusercontent.com/Lnkiim/DATA607_project3/main/multiple_choice_responses_2.csv"
 mult_response_df <- read_csv(url(url_mult_response))
@@ -1263,14 +1261,30 @@ technical_skills %>%
   with(wordcloud(word, n))
 ```
 
+
+### Sample Dataframe - DELETE ONCE EVERYTHING WORKS
+Smaller and easier to test transformations on 
+
 ```{r}
-technical_skills
-library(ggplot2)
+# create pk -> job_id
+gd_sample <-
+  gd_sample %>% 
+    mutate(job_id = row_number())
 
-p <- ggplot(data= technical_skills, aes(x=word, y=len)) +
-  geom_bar(stat="identity")
+gd_sample_df <- gd_sample %>%
+  unnest_tokens(word, Summary)
 
-p
+# remove words that don't mean much
+tidy_gd_sample <- gd_sample_df %>%
+  anti_join( stop_words, by="word")
+
+sample_freq <- tidy_gd_sample %>%
+  count(word, sort = TRUE) 
+
+tidy_gd_sample %>%
+  anti_join(stop_words) %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100))
 
 ```
 
@@ -1278,6 +1292,8 @@ p
 tf vs TF_IDF
 whats the difference?
 Why do we care?
+
+#### ANGRY CODE CHUNK NEAR END ###
 
 ```{r}
  
@@ -1305,17 +1321,17 @@ term_freq_by_rank <-
 
 # term frequency when glassdoor is a document
  
-sample_freq_by_rank <- sample_freq %>% 
-  mutate(rank = row_number(), 
-         term_freq = n/tot_word_count)
+#sample_freq_by_rank <- sample_freq %>% 
+#  mutate(rank = row_number(), 
+#         term_freq = n / tot_word_count)
 
-sample_freq_by_rank %>%
-  bind_tf_idf(word,source, n) %>%
-  arrange(desc(tf_idf))
+#sample_freq_by_rank %>%
+#  bind_tf_idf(word,source, n) %>%
+#  arrange(desc(tf_idf))
 
 
-book_words <- book_words %>%
-  bind_tf_idf(word, book, n)
+#book_words <- book_words %>%
+#  bind_tf_idf(word, book, n)
 
 # what words are most rare? 
 ```
@@ -1426,31 +1442,6 @@ trigrams_counts <- trigrams_separated %>%
 
 
 
-### Sample Dataframe - DELETE ONCE EVERYTHING WORKS
-Smaller and easier to test transformations on 
-
-```{r}
-# create pk -> job_id
-gd_sample <-
-  gd_sample %>% 
-    mutate(job_id = row_number())
-
-gd_sample_df <- gd_sample %>%
-  unnest_tokens(word, Summary)
-
-# remove words that don't mean much
-tidy_gd_sample <- gd_sample_df %>%
-  anti_join( stop_words, by="word")
-
-sample_freq <- tidy_gd_sample %>%
-  count(word, sort = TRUE) 
-
-tidy_gd_sample %>%
-  anti_join(stop_words) %>%
-  count(word) %>%
-  with(wordcloud(word, n, max.words = 100))
-
-```
 
 
 # Conclusion
