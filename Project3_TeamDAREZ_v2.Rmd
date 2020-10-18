@@ -1,7 +1,7 @@
 ---
 title: "Project 3"
 author: "Team DAREZ"
-date: "10/5/2020"
+date: "10/17/2020"
 output:
   html_document:
     df_print: paged
@@ -18,16 +18,6 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# DeleteMe Notes
-
-Delete these prior to posting.
-Zach and Rachel will reorder sections and make sure the heading levles are correct once we have all the code in the same RMD. 
-
-```{r include=FALSE, message=FALSE}
-# This is formatted from a previous project. That example project can be found through the link:
-# https://rpubs.com/deepakmongia/Data-607-Project-3
-```
-
 
 # Introduction
 
@@ -36,16 +26,17 @@ As recent as March of 2019 we are still hearing repeatedly that the demand of da
 Data scientists come in many different flavors and from many different backgrounds as well, so often it comes down to having the right set of skills for the job. So what are those specific skills, other than it saying "data scientist" on your business card, that are in demand?
 
 We set out to use our growing data science skills to begin looking at the data on what skills are in demand for data science. We chose to use 3 datasets, each looking at a slightly different angle of the question, "Which are the most valued data science skills?"
-First, we look at the 2019 Kaggle Survey on Data Science and Machine Learning. This massive, world-wide survey asks some pertinent questions of what specific tools and skills current practitioners are using. Next, we access a scrape of Glassdoor job postings that bring in the perspective of what hiring companies are asking for. Finally, a scrape of Indeed job postings is used to look at trends such as job locations and salaries as in a sense, these tell us what the job market expects of data scientists on a larger scale in terms of where we are willing to live and what salary is acceptable.
 
-Example paragraph:
-An October 2012 Harvard Business Review article called Data Scientist the “sexiest job of the 21st century.” In 21st-century time, 2012 is eons ago. Glassdoor, the popular career and company review site, has named Data Scientist the best job in America for three years running. We hear tales of huge starting salaries and high demand for talent. Still, for a number of reasons, we’re cautious.
+First, we looked at the 2019 Kaggle Survey on Data Science and Machine Learning. This massive, world-wide survey asks some pertinent questions of what specific tools and skills current practitioners are using. Next, we accessed a scrape of Glassdoor job postings that bring in the perspective of what hiring companies are asking for. Finally, a scrape of Indeed job postings was used to look at trends such as job locations and salaries. In a sense, these tell us what the job market expects of data scientists on a larger scale in terms of where we are willing to live and what salary is acceptable.
+
 
 ## Setup 
 
-How did we gather the data? What tools did we use? Explain our setup for the analysis.
+Packages needed for this project include:
 
 ```{r message = FALSE}
+#some packages repeated, but nice to know which sections they were used in
+
 # For Web-scrap of Indeed
 library(rvest)
 library(readr)
@@ -54,9 +45,9 @@ library(DT)
 library(xml2)
 
 # For graphing and nice tables
-library("ggplot2")
-library("rcartocolor")
-library("kableExtra")
+library(ggplot2)
+library(rcartocolor)
+library(kableExtra)
 
 # SQL database connection
 library(odbc) 
@@ -75,10 +66,7 @@ library(igraph)
 library(ggraph)
 
 #package for Kaggle Survey
-library(odbc)
-library(DBI)
 library (tidyverse)
-library(ggplot2)
 library (stringr)
 
 ```
@@ -86,9 +74,10 @@ library (stringr)
 
 ### Database Connection: Azure
 
-We decided to store our data in an Azure online database. We created an account and initialized the database. We set up permissions and granted each user access to the database using their IP addresses. This was our way of organizing and accessing the data from a database source. 
+We wanted to store our data in an Azure online database. We created an account and initialized the database. We set up permissions and granted each user access to the database based on their IP addresses.
 
-We created tables for each of the data sources and imported the data to each table, saving the import packages as SSIS (.dtsx) files. The initial tables included one table for the survey information from both indeed and Glassdoor, and three tables to store the Kaggle survey data. We also created a "read only" user account that was shared with each of the team members so that they could read the data. The "read only" connection is in the code below:
+We created tables for each of the data sources and imported the data to each table, saving the import packages as SSIS (.dtsx) files. The initial tables included one table for the survey information from both Indeed and Glassdoor, and three tables to store the Kaggle survey data. We also created a "read only" user account that was shared with each of the team members so that they could read the data. The "read only" connection is in the code below:
+
 
 ```{r Azure_connection}
 library(odbc) # create connection to SQL database
@@ -104,10 +93,12 @@ my_connection <- dbConnect(drv = odbc::odbc(),
 ```
 
 
-### Read the indeed survey data into an R dataframe 
-1524 observations of 7 variables
+What follows is our step-by-step method of importing the data from the database into R. The flow began by reading the data from our Indeed web-scrape into its dataframe. This process is repeated until each source is extracted from the database and in their own dataframes. It was completed using the DBI package's `dbGetQuery` function. Snippets of information containing the number of observations and the number of variables were written above the block of code that was used to read the data. Small examples of the imported data are also shown beneath the chunks. 
 
-Using the DBI package\'s `dbGetQuery` function, read the data into R.
+#### Importing Indeed
+Reading the Indeed web-scrape data into a dataframe. It contains 1524 observations of 7 variables. 
+
+
 
 ``` {r read_indeed}
 # read indeed data into a data frame named "df_indeed"
@@ -120,10 +111,9 @@ df_indeed <- dbGetQuery(my_connection,'
 head(df_indeed)
 ```
 
-### Read the Glassdoor survey into an R dataframe
-1710 observations of 7 variables
+#### Importing Glassdoor
+Reading the Glassdoor text data into a dataframe. It contains 1710 observations of 7 variables.
 
-Rinse and repeat process for each table.
 
 ``` {r read_Glassdoor}
 # read Glassdoor data into a data frame named "df_Glassdoor"
@@ -137,10 +127,9 @@ head(df_Glassdoor)
 ```
 
 
-### Read survey schema table into an R dataframe
-10 observations of 35 variables
+#### Importing Kaggle Survey Schema
+Reading the Kaggle industry survey schema into a dataframe. It contains 10 observations of 35 variables. 
 
-...still importing data...
 
 ``` {r read_survey_schema}
 # read survey schema data into a data frame named "df_survey_schema"
@@ -156,10 +145,9 @@ head(df_survey_schema)
 ```
 
 
-### Read survey multiple choice responses table into an R dataframe
-19,718 observations of 246 variables (give it a minute or more to load...my connection took about 3 minutes)
+#### Importing Kaggle Survey’s MC Responses
+Reading the Kaggle industry survey multiple choice responses into a dataframe. It contains 19,718 observations of 246 variables. 
 
-...this one is rather large, it takes several minutes to load...
 
 ``` {r read_survey_multi_choice}
 # read survey multiple choice data into a data frame named "df_survey_multi_choice"
@@ -209,10 +197,10 @@ df_survey_multi_choice <- dbGetQuery(my_connection,'
 head(df_survey_multi_choice)
 ```
 
-### Read survey other text responses table into an R dataframe 
-19,718 observations of 28 variables (also give it a minute to load)
+#### Importing Other Kaggle Responses
+Reading the Kaggle industry survey responses listed as “other” into a dataframe. It contains 19,718 observations of 28 variables.  
 
-...last one, a bit faster to load than the previous one.
+
 
 ``` {r read_survey_other_text}
 # read survey other text response (free form) data into a data frame named "df_survey_other_text"
@@ -234,19 +222,16 @@ head(df_survey_other_text)
 
 # Analysis
 
-<<<<<<< HEAD
+
 First, we look at the 2019 Kaggle Survey on Data Science and Machine Learning. This massive, world-wide survey asks some pertinent questions of what specific tools and skills current practitioners are using.
 
 Next, we access a scrape of Glassdoor job postings that bring in the perspective of what hiring companies are asking for. 
 
 Finally, a scrape of Indeed job postings is used to look at trends such as job locations and salaries as in a sense, these tell us what the job market expects of data scientists on a larger scale in terms of where we are willing to live and what salary is acceptable
-=======
-What are you going to look for in the data (besides just skills)? How are you going to get there? What cleaning was necessary?
 
-How is our review relevant to data science today? Why did we choose these examples?
->>>>>>> 126ff4340c10d98d9c67ea5dc584ea60871d7132
 
-## Kaggle Survey Data
+
+## Kaggle 2019 Survey Data
 
 For three weeks from October 8 to October 28 of 2019 Kaggle conducted an industry-wide survey with 19,717 responses from individuals in the data science and machine learning fields. Responses were aggregated into a file with data from 171 countries and any country that had less than 50 responses was placed in an "other" category to preserve anonymity of the respondents. The data collected gives a comprehensive look at the state of the industry by asking questions about their education, workplace habits, tools in use and more. It was formatted as a multiple-choice survey wherein responses could be categorized into one of several options for each question. 
 
@@ -260,7 +245,7 @@ These were used in the analysis but prior to performing any computations, the da
 
 ### Tidying and Munging the Kaggle Data
 
-The 2019 Kaggle survey contains thirty-four questions and the corresponding recorded responses. We decided to make a dataframe for each of question and response. The code to accomplish this task is below for each dataframe. It is formatted for ease of viewing to see how each question was cleaned and summarized.
+The 2019 Kaggle survey contains thirty-four questions and the corresponding recorded responses. We decided to make a dataframe for each question and response. The code to accomplish this task is below for each dataframe. It is formatted for ease of viewing to see how each question was cleaned and summarized.
 
     Q1 - What is your age (# years)?
 
@@ -622,15 +607,13 @@ q_17
 
 In this review of the Kaggle survey, we were able to summarize the selected multiple-choice responses. This allows us to see what respondents in the industry expect from new data scientists and it provided evidence of what to expect in the future. 
 
-## Kaggle Analysis
+### Kaggle Analysis
 
-<<<<<<< HEAD
-Aspiring data scientist and current data science professionals may be interested in knowing what the industry expectations are as they are constantly changing. As new software and analysis methods appear, we make changes to our processes andcreate new programs, develop new models, and improve our data systems. To understand these trends, we took a well-rounded approach. 
+Aspiring data scientist and current data science professionals may be interested in knowing what the industry expectations are as they are constantly changing. As new software and analysis methods appear, we make changes to our processes and create new programs, develop new models, and improve our data systems. To understand these trends, we took a well-rounded approach. 
 
 The data we selected provides a snapshot in time of those industry skills, tools, and expectations. We have three sources to gather information from; a large, global survey called the Kaggle Survey, a web-scrape of current jobs offered on Indeed, and a textual analysis of another web-scrape compiled from Glassdoor. We begin with the Kaggle survey.
 
-=======
->>>>>>> 126ff4340c10d98d9c67ea5dc584ea60871d7132
+
 #### Dataset:Multiple Choice Responses
 ```{r}
 Data <- dbGetQuery(my_connection,"Select * FROM dbo.multiple_choice_responses")
@@ -647,7 +630,7 @@ Since our research question is "What are the most sought after skills for data s
 DataScientists <- filter (Data_Tibble,Q5 == "Data Scientist" | Q5 == "Data Analyst" | Q5 == "Data Engineer")
 ```
 
-##### Responses
+#### Responses
 
 We are going to store the responses for **questions 18-34** in separate data frames (q_18,q_19,q_20 and so on till q_34).However, we have excluded questions that are not relevant for our analysis (non skills based questions) 
 
@@ -784,23 +767,25 @@ q_34 <-q_34 %>%
       summarize(count_response = n())
 ```
 
-##### Most cited skills
+In this review of the Kaggle survey, we were able to summarize the selected multiple-choice responses. This allows us to see what respondents in the industry expect from aspiring and existing data scientists. It also provided evidence of what to expect in the future.
+
+
+#### Most cited skills
 
 It looks like the majority of the skills-based questions can be categorized into the following areas-
 1.**Programming Languages**: Questions 18 and 19
 2.**Data Visualization**: Question 20
 3.**ML Tools and Products**: Questions 25,32 and 33
-4.**ML Algorithms**: Questions 24 
-5.**ML Framework**: Question 28
+4.**ML Framework**: Question 28
 5.**Big Data**: Question 31
 6.**Cloud Platforms**: Questions 29 and 30
 7.**Relational Databases**:Question 34 
 8.Computer Vision: Question 26
 9.NLP: Question 27
 
-We are particularly interested in understanding what the most cited tools or skills were for #1-7 above.
+We are particularly interested in understanding what the most cited tools or skills were for #1-6 above.
 
-1.Programming Languages
+*1.Programming Languages*
 
 We will combine the individual data frame for each question first before plotting the data.
 
@@ -822,7 +807,6 @@ knitr::kable(PL)
 ```
 
 ```{r}
-<<<<<<< HEAD
 PL$Response <- factor(PL$Response, levels = PL$Response[order(PL$sum_response)])
 
 ggplot(data=PL, aes(x=Response,y=sum_response, fill=Response))+
@@ -832,15 +816,13 @@ ggplot(data=PL, aes(x=Response,y=sum_response, fill=Response))+
   coord_flip() +  
   xlab('Response Count') +
   ylab('Pramming Languages') 
-=======
-ggplot(data=PL, aes(x=Response,y=sum_response, fill=Response))+geom_col()+ geom_text(label=(PL$sum_response))+
-  ggtitle("Programming Languages")
->>>>>>> 126ff4340c10d98d9c67ea5dc584ea60871d7132
+
+
 ```
 
-2. Data Visualization
+*2. Data Visualization*
 ```{r}
-<<<<<<< HEAD
+
 q_20$response <- factor(q_20$response, levels = q_20$response[order(q_20$count_response)])
 
 q_20graph <- q_20[-c(1), ]
@@ -852,31 +834,13 @@ ggplot(data=q_20graph, aes(x=response,y=count_response, fill=response))+
   coord_flip() +  
   xlab('Response Count') +
   ylab('Data Visualization Tools') 
-=======
-ggplot(data=q_20, aes(x=response,y=count_response, fill=response))+geom_col()+ geom_text(label=(q_20$count_response))+
-  ggtitle("Data Visualization Tools")
->>>>>>> 126ff4340c10d98d9c67ea5dc584ea60871d7132
 ```
 
-3. ML Tools/Products
 
-############################## ANGRY ERROR ########################
-
-```{r}
-#ML <- rbind(q_25,q_32,q_33)
-#ML <-ML %>% 
-#    group_by(response) %>%
-#      summarize(sum_response= sum(count_response))
-#knitr::kable(ML)
-```
-```{r}
-#ggplot(data=ML, aes(x=response,y=sum_response, fill=response))+geom_col()+ geom_text(label=(ML$sum_response))+
-#  ggtitle("ML Tools and Products")
-```
-4. ML Algorithm 
+*3. ML Algorithm *
 
 ```{r}
-<<<<<<< HEAD
+
 q_24$response <- factor(q_24$response, levels = q_24$response[order(q_24$count_response)])
 
 q_24graph <- q_24[-c(1), ]
@@ -889,15 +853,12 @@ ggplot(data=q_24graph, aes(x=response,y=count_response, fill=response)) +
   coord_flip() +  
   xlab('Response Count') +
   ylab('ML Algorithms')
-=======
-ggplot(data=q_24, aes(x=response,y=count_response, fill=response))+geom_col()+ geom_text(label=(q_24$count_response))+
-  ggtitle("ML Algorithms")
->>>>>>> 126ff4340c10d98d9c67ea5dc584ea60871d7132
+
 ```
 
-5. ML Framework
+*4. ML Framework*
 ```{r}
-<<<<<<< HEAD
+
 q_28$response <- factor(q_28$response, levels = q_28$response[order(q_28$count_response)])
 
 q_28graph <- q_28[-c(1), ]
@@ -909,12 +870,10 @@ ggplot(data=q_28graph, aes(x=response,y=count_response, fill=response)) +
   xlab('Response Count') +
   ylab('ML Frameworks') +
   coord_flip()
-=======
-ggplot(data=q_28, aes(x=response,y=count_response, fill=response))+geom_col()+ geom_text(label=(q_28$count_response))+
-  ggtitle("ML Framework")
->>>>>>> 126ff4340c10d98d9c67ea5dc584ea60871d7132
+
+
 ```
-6. Cloud Platforms
+*5. Cloud Platforms*
 
 ```{r}
 CloudPlatform <- rbind(q_29,q_30)
@@ -947,19 +906,31 @@ knitr::kable(CloudPlatform)
 ```  
 
 ```{r}
-<<<<<<< HEAD
+
 CloudPlatform <- rbind(q_29,q_30)
 CloudPlatform <-CloudPlatform %>% 
     group_by(response) %>%
       summarize(sum_response= sum(count_response))
 knitr::kable(CloudPlatform)
-```
-```{r}
+
 CloudPlatform$response[CloudPlatform$response == ""|CloudPlatform$response=="None"] <- NA
-=======
-ggplot(data=CloudPlatform, aes(x=response,y=sum_response, fill=response))+geom_col()+ geom_text(label=(CloudPlatform$sum_response))+
-  ggtitle("Cloud Platforms")
->>>>>>> 126ff4340c10d98d9c67ea5dc584ea60871d7132
+```
+
+```{r}
+
+CloudPlatform$response <- factor(CloudPlatform$response, levels = CloudPlatform$response[order(CloudPlatform$sum_response)])
+
+CloudPlatformgraph <- CloudPlatform[-c(1), ]
+
+
+ggplot(data=CloudPlatformgraph, aes(x=response,y=sum_response, fill=response)) + 
+  geom_col(fill="#53baa3") + 
+  geom_text(label=(CloudPlatformgraph$sum_response)) +
+  ggtitle("Freq of Selected Cloud Platforms") +
+  xlab('Response Count') +
+  ylab('Cloud Platforms') +
+  coord_flip()
+
 ```
 
 
@@ -993,7 +964,7 @@ OR  [Q5_OTHER_TEXT] like '%Math%'")
 DataRoles
 ```
 
-##### Primary Tool
+#### Primary Tool
 
 The survey question where a significant amount of respondents picked the other option is Question 14 (What is the primary tool that you use at work or school to analyze data? (Include text response) - Selected Choice). Therefore, we would like to see if there are any other skillsets or tools here that are worth looking into besides the ones mentioned in the main dataset.
 
@@ -1026,17 +997,12 @@ Looks like Python might be the winner here.
 
 ## Indeed Scrape
 
-We performed multiple web-scrapes of Indeed.com to collect data on real-world examples of jobs with the title "data scientist." These data were intended to give further insight into the expectations of the market such as where data scientists’ jobs are located and the salaries. Thus, we looked for the looked for those markers of job title, company, salary ranges and location of each posting. 
+We performed multiple web-scrapes of Indeed.com to collect data on real-world examples of jobs with the title "data scientist." These data were intended to give further insight into the expectations of the market such as where data scientists’ jobs are located and the salaries. Thus, we looked for those markers of job title, company, salary ranges and location of each posting. 
 
 Our initial scrape was compiled to create a sample for analysis. In this, we only wanted to create a data frame with the job title from the first page of results in the Indeed job search. A regular expression in conjunction with functions from the rvest package allowed the information to be extracted from the html of the webpage. The first scraping example is displayed below. 
 
-<<<<<<< HEAD
 
-
-
-=======
->>>>>>> 126ff4340c10d98d9c67ea5dc584ea60871d7132
-```{r eval = FALSE}
+```{r}
 url <- 'https://www.indeed.com/jobs?q=data%20scientist&l&vjk=00ba1a22ba67ffd2'
 webpage <- read_html(url)
 job_data_html <- html_nodes(webpage,'.jobtitle , #sja0 b') 
@@ -1052,9 +1018,9 @@ str_extract(job_data, "(\\w+.+)+")
 
 We found this string to be the most effective at parsing the job title of all listing on the first page into usable form. We repeated this process until we had a clear understanding of each variable of interest to us available on the webpage. 
 
-Some information presented challenges that were not transforming data types or parsing strings but rather developing a standard quantifiable value from a range of numbers in different units and categories. A good example of this is the monetary information where, the employers listed the information as a range of values per year, per hour, and contractual amounts. None of which would be remotely close when performing calculations. 
+Some information presented challenges that were not transforming data types or parsing strings but rather developing a standard quantifiable value from a range of numbers in different units and categories. A good example of this is the monetary information where the employers listed the information as a range of values per year, per hour, and contractual amounts. None of which would be remotely close when performing calculations. 
 
-To solve this, we separated the information we had into categories and selected the category with the most results. Those with a salary listed as a range per year had the highest proportion of jobs of those jobs with any monetary information on its posting. The process of cleaning can be seen here:
+To solve this, we separated the information we had into categories and selected the category with the most results. Those with a salary listed as a range per year had the highest proportion of jobs with any monetary information on its posting. The process of cleaning can be seen here:
 
 ```{r, eval = FALSE}
 # Performing the 1-page scrape and producing a text file from the html of indeed.com
@@ -1095,7 +1061,6 @@ In total, there were at least 18 scrapes performed, two for each variable in the
 
 empties <- data.frame(title=character(),
                     date=character(),
-<<<<<<< HEAD
                     company=character(),
                     salary=character(),
                     maxsal=character(),
@@ -1148,7 +1113,7 @@ for (i in seq(0, 800, 10)){
           html_attr('href')
             link <- paste0("https://www.indeed.com",link)
   Indeed <- rbind(empties, as.data.frame(cbind(title,
-=======
+
                   company=character(), 
                  salary=character(),
                  maxsal=character(),
@@ -1195,7 +1160,6 @@ links <- var %>%
         link <- paste0("https://www.indeed.com",link)
         
 Indeed <- rbind(empties, as.data.frame(cbind(title,
->>>>>>> 126ff4340c10d98d9c67ea5dc584ea60871d7132
                                                   date,
                                                   company,
                                                   salary,
@@ -1203,12 +1167,9 @@ Indeed <- rbind(empties, as.data.frame(cbind(title,
                                                   minsal,
                                                   location,
                                                   summary,
-<<<<<<< HEAD
                                                   link)))
-=======
                                                   links
                                                   )))
->>>>>>> 126ff4340c10d98d9c67ea5dc584ea60871d7132
 }
 ```
 
@@ -1216,7 +1177,7 @@ This creates a data frame of the publicly posted jobs with the title "data scien
 
 ### Indeed Analysis
 
-The code above results in the CSV stored in our Github repository, which I'll read into a dataframe. 
+The code above results in the CSV stored in our Github repository, which we'll read into a dataframe. 
 
 ```{r}
 indeed_df <- read.csv(url("https://raw.githubusercontent.com/Lnkiim/DATA607_project3/main/Indeed.csv"), stringsAsFactors=FALSE)
@@ -1289,8 +1250,11 @@ ggplot(indeed_df, aes(x = factor(sal_range), fill = sal_range)) +
 
 
 ## Glassdoor Text Analysis
-General Methodology: 
-First we observed the most frequently occuring words to see if any traits of a data scientist would occur. Next, we decided to narrow our search of desirable traits by individually extracting tools, technical skills, and soft skills. Extracting tools would tell us what language/frameworks/software recruiters are looking for applicants to have already mastered. Technical skills could be more relevant to express skills related to machine learning and math. Soft skills are relevant to interpersonal skills. 
+
+In this analysis we used several functions to compute the most frequently occurring words in the data set. The data came from jobs posted on Glassdoor that were scraped into a text file on August 1, 2020. Our goal was to determine if there were any traits or trends that a data scientist would need. To do so, we narrowed our search down to those skills generally thought to be desirable traits of a data scientist based on what we understood as existing norms. This led to an extraction process that gave us the tools, technical skills, and soft skills present in the posting of data science positions for that point in time. 
+
+Ideally, the extracted information would be able to tell us what recruiters are looking for and what applicants should have already mastered. Technical skills could be more relevant to express skills related to machine learning and math. Soft skills are relevant to interpersonal behavior. 
+
 
 ```{r results = 'hide', message = FALSE}
 # Reading in data
@@ -1300,8 +1264,10 @@ gd_df <- read_csv(url(gd_url))
 
 
 
-### Most frequently occurring words in dataset
-As a first iteration of the analysis, we looked at the most frequently occuring words across all job descriptions. Notice in the code, that we anti_join with 'stop words'. 'Stop words' are lexicons that are commonly occuring words that are usually functional in syntax but provide little content (eg: in, the, who, was). This will make our dataset smaller and more performant for further manipulation.
+#### Word Counts
+
+As a first iteration of the analysis, we looked at the most frequently occuring words across all job descriptions. Notice in the code, that we anti_join with ‘stop words’. ‘Stop words’ are lexicons that are commonly occuring words that are usually functional in syntax but provide little content (eg: in, the, who, was). This will make our dataset smaller and more compliant for further manipulation.
+
 
 ```{r}
 
@@ -1327,8 +1293,10 @@ global_word_count %>%
 
 ```
 
-#### Word Cloud for most frequently occurring words
-The wordcloud below nicely visualizes the most frequently occurring words. The most frequently used words are relevant to describe the data science industry as a whole. However, there isn't much insight we can glean about the most desirable traits of a data scientist just from a simple count.
+#### Wordcloud
+
+The wordcloud below nicely visualizes the most frequently occurring words. The most frequently used words are relevant to describe the data science industry as a whole. However, there isn’t much insight we can glean about the most desirable traits of a data scientist just from a simple count.
+
 
 ```{r}
 
@@ -1341,8 +1309,9 @@ tidy_gd_df %>%
 ```
 
 
-### What technical skills are most sought after?
-Methodology: Look at most frequently occuring words. This is appropriate because tools are usually named as single words. We start by curating a list of technical skills and see how frequently these words appear in our Glassdoor job description dataset. Instead of scraping a list of technical skills/tools from scratch, we started with some tools that appeared in the Kaggle Survey dataset. After analyzing the results with just the tools that appeared in the Kaggle survey, we found that the data was sparse and hypothesized that the list of technical skills was not inclusive enough to capture the story behind the Glassdoor dataset. Hence, we manually entered more frequently used engineering tools and got better results. 
+#### In-demand Skills
+Our methodology was to observe the most frequently occurring words in the job descriptions of each posting. This is appropriate because tools are usually named as single words which indicate hard skills demanded by the potential employer. We start by curating a list of technical skills and see how frequently these words appear in our Glassdoor job description dataset. Instead of scraping a list of technical skills/tools from scratch, we started with some tools that appeared in the Kaggle Survey dataset. After analyzing the results with just the tools that appeared in the Kaggle survey, we found that the data was sparse and hypothesized that the list of technical skills was not inclusive enough to capture the story behind the Glassdoor dataset. Hence, we manually entered more frequently used engineering tools and got better results.
+
 
 ```{r}
 # reading raw csv but probably more ideal to bring data from database
@@ -1409,8 +1378,9 @@ technical_word_count
 
 ```
 
-### Wordcloud for technical tools
-We can see from the Wordcloud and the dataframe, Python and SQL are the most sought after technical skills by a significant margin. The second and third sought more frequently sought after tools include Spark and Tableau but the large gap between the top two and the next two, suggests that there are technical skills which may not be single word tools. We investigated further it more advanced natural language processing frameworks.
+#### Technical Wordcloud
+We can see from the Wordcloud and the data frame, Python and SQL are the most sought after technical skills by a significant margin. The second and third sought more frequently sought after tools include Spark and Tableau but the large gap between the top two and the next two, suggests that there are technical skills which may not be single word tools. We investigated further in more advanced natural language processing frameworks. 
+
 
 ```{r}
 technical_skills %>%
@@ -1418,8 +1388,9 @@ technical_skills %>%
   with(wordcloud(word, n))
 ```
 
-### TF and TF-IDF
-In the previous section we looked at which words were mentioned the most frequently across all job descriptions on Glassdoor. In this section, we investigated which traits of a data scientist were most desirable by term frequency. Term frequency here is defined a little differently than a global word count because this calculation is grouped by 'document' (which is our use case is a company). This means that the frequency of a word, takes into account how many times a word was mentioned relative to the total word count of company. Next we looked at TF-IDF which is another way evaluating if a word is signficant. Previously we looked at popular a word was, with tf-idf, we're looking to measure the rarity of a word. Oftentimes, uniquely used words will give us some insight about the entire document, more than the most popular word.
+#### TF and TF-IDF
+In the previous section we looked at which words were mentioned the most frequently across all job descriptions on Glassdoor. In this section, we investigated which traits of a data scientist were most desirable by term frequency. Term frequency here is defined a little differently than a global word count because this calculation is grouped by ‘document’ (which in our use case is a company). This means that the frequency of a word takes into account how many times a word was mentioned relative to the total word count of the company. Next we looked at TF-IDF which is another way of evaluating if a word is significant. Previously we looked at popular words, with tf-idf, we are looking to measure the rarity of a word. Oftentimes, uniquely used words will give us some insight about the entire document, more than the most popular word.
+
 
  
 
@@ -1450,11 +1421,11 @@ term_freq_by_rank
 
 ```
 
-Unfortuntately, the tf-idf doesn't give us much helpful additional insight in discovering which traits make a most desirable data scientist. However, it does show us that the top words are jargon that specific to a specialized industry. (eg: arbitrage, banking, scm).
- 
+Unfortunately, the tf-idf doesn’t give us much helpful additional insight in discovering which traits make a most desirable data scientist. However, it does show us that the top words are jargon specific to a specialized industry. (eg: arbitrage, banking, scm).
 
-### Discovering Popular Soft and Technical Skills with n-grams
-As mentioned previously, its reasonable to search for *tools* with a global count because tools are often single words. However, soft skills and technical skills may be expressed more frequently with two words, or perhaps even three words. In this section we look at n_grams, which is an investigation as to how often n number of words occur together.
+#### N-gram Analysis
+As mentioned, it is reasonable to search for tools with a global count because tools are often single words. However, soft skills and technical skills may be expressed more frequently with two words, or perhaps even three words. In this section we look at n_grams, which is an investigation as to how often n number of words occur together.
+
 
 
 ```{r}
@@ -1476,11 +1447,13 @@ bigram_counts <- bigrams_separated %>%
   count(word1, word2, sort = TRUE)
 ```
 
-Here we can see that the most frequently occuring couplings of words, do illustrate the most sought after technical and soft skills. Lets use the visual below to investigate further.
+Here we can see that the most frequently occuring couplings of words do illustrate the most sought after technical and soft skills. Let us use the visual below to investigate further.
+
 ```{r}
 bigram_counts
 ```
-Here we're able to visualize the relationship between couplings of words. The darkness of the arrow expresses how strong the relationship between two words is, and the arrow indicates the direction of the relationship. Using n-grams when n equals 2 lists a lot of technical skills, some of which include: 'machine learning', 'data analytics', 'communication skills', 'data mining','deep learning'.
+
+Here we’re able to visualize the relationship between couplings of words. The darkness of the arrow expresses how strong the relationship between two words is, and the arrow indicates the direction of the relationship. Using n-grams when n equals 2 lists a lot of technical skills, some of which include: ‘machine learning’, ‘data analytics’, ‘communication skills’, ‘data mining’,‘deep learning’.
 
 ```{r}
 set.seed(2022)
@@ -1500,7 +1473,7 @@ ggraph(bigram_graph, layout = "fr") +
   theme_void()
 ```
 
-Looking at n-grams where n equals three shows us many more soft skills that are sought after. Some of the most sought after soft skills include: written comunication skills, fast paced environment, cross functional teams, verbal communication skills, agile software development, and strong analytical skills.
+Looking at n-grams where n equals three shows us many more soft skills that are sought after. Some of the most sought after soft skills include: written communication skills, fast paced environment, cross functional teams, verbal communication skills, agile software development, and strong analytical skills.
 
 ```{r}
 
@@ -1527,15 +1500,42 @@ trigrams_counts
 
 # Conclusion
 
-Which are the most valued data science skills? How do we know? Did we learn anything different than what the articles/literature said?
+It is interesting to see that as we write this report in R, the most in-demand language for data science and machine learning appears to be Python from both the Glassdoor and Kaggle analyses. This was closely followed by SQL with both languages maintaining a strong lead. With Python being the most frequently used language, it is a natural progression to see Matplotlib as the most frequently used visualization tool. It comes as no surprise that the other tools for machine learning frameworks, linear regressions, and modeling are also based on working with the Python programming language. This is easily the most notable hard skill and tool demanded from the programming portion of what data scientists do; but it is not the only skill.   
 
-# Sources
+Soft skills, elucidated by the tables and clusters of words displayed in the Glassdoor analysis, gives another look into what these positions require. We found that having experience, especially in data, was another high priority. Employers are interested in individuals who can work well in teams and above all, possess some business knowledge. These word clouds added to more hard skills for an aspiring data scientist to learn Spark and Tableau. 
 
-Where did the data come from? Who analyzed each part of the data?
+There is no clear choice in the data science community when it comes to selecting cloud platforms. The top 3 in use, according to the Kaggle survey analysis were: Amazon’s AWS, Google’s Cloud, and Microsoft Azure. Although it is important to note that many people did not respond to this at all, which could mean those respondents are using multiple or no cloud platforms. Regardless, selecting one of those main three would be a good place to start for aspiring data scientists. 
 
-> Douglas Barley: 
-> Atina Karim:
-> Rachel Greenlee:
-> Ellen Kim: 
-> Zach Palmore
+From Indeed, we can also see that the salary information available at the time of the scrape is inconsistent with prior literature. Although most employers did not list salary information, there appears to be a slightly lower salary for data scientists. However, this may be due to several factors including the numerous government jobs listed at that particular time and the conditions of the economy. Scraping the site with more frequency over time might give us a better sample. It may also be possible that salaries show wider discrepancies when factored by country. For example, salaries in India may be much lower than those in the United States. 
+
+Importantly, we are living in an unprecedented time. A pandemic has rearranged and continues rearrange company dynamics as we adapt to a new lifestyle across the world. We have no doubt that these changes have influenced the data.  
+
+For us, this project was meant to teach us how to collaborate on a project of this size, work with messy data, and learn a bit more about the field we all are entering. It felt a bit like peeling back the layers of an onion, seeing each other's code and findings made us pose more questions and think of new directions to pursue. So much data, so little time. We hope the analysis above gives others some preliminary insight into the demands and expectations of the data science field, and prompts readers to peel back another layer of the onion. 
+
+
+
+
+## Sources
+
+Gan, James. “Various Data Science Titled Jobs in Singapore 2020.” Kaggle, 16 Aug. 2020, www.kaggle.com/jamesgsw/various-data-science-titled-jobs-in-singapore-2020/metadata. 
+
+Human Resources, University of Pennsylvania. “What's Driving the Demand for Data Scientists?” Knowledge@Wharton, 8 Mar. 2019, knowledge.wharton.upenn.edu/article/whats-driving-demand-data-scientist
+
+Milan. “GlassDoor(Data Scientist).” Kaggle, 1 Aug. 2020, 
+www.kaggle.com/milan400/glassdoordata-scientist. 
+
+Palmore, Zach. “Indeed.csv” Data Scientist\ Jobs, Employment | Indeed.com, 13 Oct. 2020, www.indeed.com/jobs?q=data+scientist%5C. 
+
+## Contributors
+
+> Douglas Barley: database storage, Kaggle Survey tidying, presenter  
+
+> Atina Karim: database storage, Kaggle Survey analysis, lead presenter  
+
+> Rachel Greenlee: project manager, Indeed analysis, graphing support, writing support  
+
+> Ellen Kim: github master, Glassdoor tidying and analysis, presenter  
+
+> Zachary Palmore: Indeed scrape, Indeed tidying, lead project writer  
+
 
